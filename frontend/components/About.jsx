@@ -100,8 +100,7 @@ const About = () => {
       <section className="bg-white py-12 w-full">
         <div className="w-full px-0">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 px-10">
-            <h1 className="text-xl px-10 font-extrabold">Hostel rooms</h1>
-            <div>
+            <h1 className="text-xl px-10 font-extrabold">Hostel rooms</h1>            <div>
               <Link
                 to="/rooms"
                 className="inline-block bg-sky-900 text-white px-4 py-2 rounded-md"
