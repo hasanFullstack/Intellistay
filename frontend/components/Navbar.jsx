@@ -1,3 +1,4 @@
+import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../src/auth/AuthContext";
 
@@ -5,7 +6,7 @@ const Navbar = ({ openAuth }) => {
   const { user } = useAuth();
 
   return (
-    <header className="navbar">
+    <header className="navbar container mx-auto px-4 py-3 flex justify-between items-center">
       <div className="navbar__inner">
         <div className="navbar__brand">
           <Link to="/" className="navbar__logo">

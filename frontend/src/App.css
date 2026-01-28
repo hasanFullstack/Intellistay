@@ -1,3 +1,4 @@
+@import "tailwindcss";
 #root {
   display: flex;
   flex-direction: column;
@@ -146,6 +147,61 @@ button.btn-icon-danger,
 .btn-icon-danger .bi {
   color: #e53935 !important;
   font-size: 1.05rem;
+}
+
+/* Project text color utility that matches brand primary */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+/* Custom utility for 50px horizontal padding */
+.px-50 {
+  padding-left: 50px !important;
+  padding-right: 50px !important;
+}
+
+/* Video poster & overlay styles */
+.video {
+  position: relative;
+}
+.video-play-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.video-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+}
+.video-frame {
+  position: relative;
+  max-width: 96%;
+  width: 960px;
+  background: transparent;
+}
+.video-close {
+  position: absolute;
+  right: -18px;
+  top: -18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Accordion chevron icon */

@@ -1,14 +1,17 @@
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import "./App.css";
-
+import "./index.css";
 import Navbar from "../components/Navbar";
 import PersonalityQuiz from "../components/PersonalityQuiz";
 import Home from "./pages/Home";
 import UserDashboard from "./pages/user/UserDashborad";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import AuthModal from "./pages/AuthModal";
+import About from "../components/About";
+import Rooms from "../components/Rooms";
 
 import { useState } from "react";
 
@@ -32,7 +35,7 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
 
       <Routes>
         <Route path="/" element={<Home />} />
-
+        <Route path="/about" element={<About />} />
         <Route
           path="/dashboard/user"
           element={
@@ -50,6 +53,7 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
             </ProtectedRoute>
           }
         />
+        <Route path="/rooms" element={<Rooms />} />
       </Routes>
     </>
   );
