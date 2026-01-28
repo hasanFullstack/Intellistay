@@ -6,7 +6,6 @@ import "./App.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/footer";
 import PersonalityQuiz from "../components/PersonalityQuiz";
-import Footer from "../components/Footer";
 import Home from "./pages/Home";
 import Contact from "./pages/Contact";
 import Rooms from "./pages/Rooms";
