@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import AOS from "aos";
 import { getAllHostels } from "../api/hostel.api";
 import { getRoomsByHostel } from "../api/room.api";
+import HostelHero from "../../components/landing/HostelHero";
+import RoomSection from "../../components/landing/RoomSection";
+import FeaturesSection from "../../components/landing/Features";
+import AccommodationSection from "../../components/landing/AccommodationSection";
+import ContactsSection from "../../components/landing/Contact";
 
 const Home = () => {
   const [hostels, setHostels] = useState([]);
@@ -47,152 +52,20 @@ const Home = () => {
   };
 
   return (
-    <>
+    <div>
       {/* HERO SECTION */}
-      <section
-        className="vh-100 d-flex align-items-center text-white"
-        style={{
-          background:
-            "linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)), url('https://images.unsplash.com/photo-1560448075-bb4caa6c8c91') center/cover",
-        }}
-      >
-        <div className="container text-center" data-aos="fade-up">
-          <h1 className="display-4 fw-bold">Find Your Perfect Hostel</h1>
-          <p className="lead">Affordable stays for students & professionals</p>
-
-          {/* SEARCH BAR */}
-          <div className="row justify-content-center mt-4">
-            <div className="col-md-8 bg-white p-3 rounded shadow">
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <input className="form-control" placeholder="Location" />
-                </div>
-                <div className="col-md-3">
-                  <input type="date" className="form-control" />
-                </div>
-                <div className="col-md-3">
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Budget"
-                  />
-                </div>
-                <div className="col-md-2">
-                  <button className="btn btn-primary w-100">Search</button>
-                </div>
-              </div>
-            </div>
-          </div>
+      <HostelHero />
+      <RoomSection />
+      <FeaturesSection />
+      <AccommodationSection />
+      <ContactsSection />
+      {/* Floating Cart Icon (Bottom Right) */}
+      <div className="fixed bottom-8 right-8 will-change-transform">
+        <div className="bg-white hover:bg-[#235784] p-3 rounded-full shadow-lg border border-slate-100 text-slate-700 hover:bg-slate-50 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>
         </div>
-      </section>
-
-      {/* FEATURE SECTION */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="row text-center">
-            {["Verified Hostels", "Affordable Pricing", "Student Friendly"].map(
-              (item, i) => (
-                <div key={i} className="col-md-4" data-aos="zoom-in">
-                  <h4 className="fw-bold">{item}</h4>
-                  <p className="text-muted">
-                    Trusted accommodation with modern facilities.
-                  </p>
-                </div>
-              ),
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* HOSTELS SECTION */}
-      <section className="py-5">
-        <div className="container">
-          <h2 className="text-center mb-4" data-aos="fade-up">
-            Popular Hostels
-          </h2>
-
-          {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          ) : (
-            <div className="row">
-              {hostels.map((h) => (
-                <div className="col-md-4 mb-4" key={h._id} data-aos="fade-up">
-                  <div className="card shadow-sm h-100">
-                    <img
-                      src="https://images.unsplash.com/photo-1554995207-c18c203602cb"
-                      className="card-img-top"
-                      alt="hostel"
-                    />
-                    <div className="card-body">
-                      <h5 className="card-title">{h.name}</h5>
-                      <p className="card-text text-muted">{h.location}</p>
-
-                      {/* Room Info */}
-                      <div className="mb-3">
-                        <div className="small mb-2">
-                          <span className="badge bg-info">
-                            {(hostelRooms[h._id] || []).length} rooms
-                          </span>
-                          {getAvailableRoomsCount(h._id) > 0 && (
-                            <span className="badge bg-success ms-2">
-                              {getAvailableRoomsCount(h._id)} available
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <p className="fw-bold text-success">
-                        From Rs {getMinPrice(h._id)} per bed
-                      </p>
-
-                      {h.amenities && h.amenities.length > 0 && (
-                        <div className="mb-3">
-                          <small className="text-muted">Amenities:</small>
-                          <div>
-                            {h.amenities.slice(0, 2).map((amenity, i) => (
-                              <span
-                                key={i}
-                                className="badge bg-light text-dark me-1 mb-1"
-                              >
-                                {amenity}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <button className="btn btn-outline-primary w-100">
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA SECTION */}
-      <section className="py-5 bg-dark text-white text-center">
-        <div className="container" data-aos="zoom-in">
-          <h2>Are You a Hostel Owner?</h2>
-          <p>List your hostel and reach more students</p>
-          <a href="/register" className="btn btn-warning">
-            Register as Owner
-          </a>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="py-4 bg-light text-center">
-        <p className="mb-0">© 2026 IntelliStay. All rights reserved.</p>
-      </footer>
-    </>
+      </div>
+    </div>
   );
 };
 
