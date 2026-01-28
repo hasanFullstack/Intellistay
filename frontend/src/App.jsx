@@ -4,11 +4,13 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import "./App.css";
 
 import Navbar from "../components/Navbar";
+import Footer from "../components/footer";
 import PersonalityQuiz from "../components/PersonalityQuiz";
 import Home from "./pages/Home";
 import Contact from "./pages/Contact";
 import Rooms from "./pages/Rooms";
 import Hostels from "./pages/Hostels";
+import RoomDetail from "./pages/RoomDetail";
 import UserDashboard from "./pages/user/UserDashborad";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import AuthModal from "./pages/AuthModal";
@@ -38,6 +40,7 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/rooms" element={<Rooms />} />
         <Route path="/hostels" element={<Hostels />} />
+        <Route path="/room/:roomId/:hostelId" element={<RoomDetail />} />
 
         <Route
           path="/dashboard/user"
@@ -57,6 +60,7 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
           }
         />
       </Routes>
+      <Footer />
     </>
   );
 };

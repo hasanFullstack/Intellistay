@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllHostels } from "../api/hostel.api";
 import { getRoomsByHostel } from "../api/room.api";
 import "./Rooms.css";
 
 const Rooms = () => {
+  const navigate = useNavigate();
   const [hostels, setHostels] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -237,9 +239,14 @@ const Rooms = () => {
                         </div>
                       </div>
 
-                      <button className="btn-book">
+                      <button
+                        onClick={() =>
+                          navigate(`/room/${room._id}/${selectedHostel}`)
+                        }
+                        className="btn-book"
+                      >
                         <i className="bi bi-calendar-check me-2"></i>
-                        Book Now
+                        View Details
                       </button>
                     </div>
                   ))}

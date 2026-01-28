@@ -1,3 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer components {
+  .footer-icon {
+    @apply w-10 h-10 rounded-full bg-white text-[#245680] flex items-center justify-center cursor-pointer hover:scale-105 transition;
+  }
+}
+
 :root {
   /* Brand Colors */
   --color-primary: #235784;
