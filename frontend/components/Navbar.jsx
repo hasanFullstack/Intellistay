@@ -16,7 +16,7 @@ const Navbar = ({ openAuth }) => {
         <div className="navbar__brand">
           <Link to="/" className="navbar__logo">
             <img
-              src="../public/logo.png"
+              src="/logo.png"
               alt="INTELLISTAY Logo"
               className="navbar__logo-img"
             />

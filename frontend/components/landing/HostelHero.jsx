@@ -67,7 +67,7 @@ const HostelHero = () => {
             alt="Cozy attic room with skylights"
             className="w-full h-full object-cover"
           />
-          <button className="absolute rounded-r-20 bottom-21.5 left-0 bg-[#2b5a84] hover:bg-white hover:!translate-y-0 text-white px-12 py-20 h-23 w-[170px] font-semibold transition-colors">
+          <button className="absolute flex items-center justify-center !rounded-r-xl bottom-21.5 left-0 bg-[#235784] hover:!bg-white hover:!text-[#2b5a84] text-white px-12 py-11 h-23 font-semibold transition-all ">
             Search
           </button>
         </div>
