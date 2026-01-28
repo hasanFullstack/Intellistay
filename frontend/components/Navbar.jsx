@@ -2,7 +2,13 @@ import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../src/auth/AuthContext";
 
 const Navbar = ({ openAuth }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to logout?")) {
+      logout();
+    }
+  };
 
   return (
     <header className="navbar">
@@ -21,8 +27,14 @@ const Navbar = ({ openAuth }) => {
           <NavLink to="/" end className="navlink">
             Home
           </NavLink>
-          <NavLink to="/about" className="navlink">
-            About
+          <NavLink to="/hostels" className="navlink">
+            Hostels
+          </NavLink>
+          <NavLink to="/rooms" className="navlink">
+            Rooms
+          </NavLink>
+          <NavLink to="/contact" className="navlink">
+            Contact
           </NavLink>
         </nav>
 
@@ -33,15 +45,23 @@ const Navbar = ({ openAuth }) => {
             </button>
           )}
 
-          {user?.role === "student" && (
-            <Link to="/dashboard/user" className="btn btn--ghost">
-              Dashboard
-            </Link>
-          )}
-          {user?.role === "owner" && (
-            <Link to="/dashboard/owner" className="btn btn--ghost">
-              Dashboard
-            </Link>
+          {user && (
+            <div className="navbar__user-menu">
+              {user?.role === "student" && (
+                <Link to="/dashboard/user" className="btn btn--ghost">
+                  Dashboard
+                </Link>
+              )}
+              {user?.role === "owner" && (
+                <Link to="/dashboard/owner" className="btn btn--ghost">
+                  Dashboard
+                </Link>
+              )}
+
+              <button className="btn btn--outline" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
           )}
         </div>
       </div>

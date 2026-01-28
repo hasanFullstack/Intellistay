@@ -12,11 +12,17 @@ const AddRoom = ({ hostelId, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [previewImages, setPreviewImages] = useState([]);
 
   const submit = async (e) => {
     e.preventDefault();
     if (!data.roomType || !data.totalBeds || !data.pricePerBed) {
       setError("All fields are required");
+      return;
+    }
+
+    if (data.images.length === 0) {
+      setError("Please upload at least one image");
       return;
     }
 
@@ -32,6 +38,7 @@ const AddRoom = ({ hostelId, onSuccess }) => {
         description: "",
         images: [],
       });
+      setPreviewImages([]);
       alert("Room added successfully!");
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -40,6 +47,30 @@ const AddRoom = ({ hostelId, onSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setData((prev) => ({
+          ...prev,
+          images: [...prev.images, reader.result],
+        }));
+        setPreviewImages((prev) => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -135,6 +166,60 @@ const AddRoom = ({ hostelId, onSuccess }) => {
           rows="2"
         ></textarea>
       </div>
+
+      <div className="mb-3">
+        <label htmlFor="roomImages" className="form-label fw-semibold">
+          Upload Images (Featured + Gallery)
+        </label>
+        <input
+          id="roomImages"
+          type="file"
+          className="form-control form-control-lg"
+          accept="image/*"
+          multiple
+          onChange={handleImageUpload}
+        />
+        <small className="text-muted d-block mt-2">
+          First image will be used as featured image. Upload multiple images for
+          gallery.
+        </small>
+      </div>
+
+      {previewImages.length > 0 && (
+        <div className="mb-3">
+          <label className="form-label fw-semibold">Uploaded Images</label>
+          <div className="row g-2">
+            {previewImages.map((img, idx) => (
+              <div key={idx} className="col-6 col-md-3">
+                <div className="position-relative">
+                  <img
+                    src={img}
+                    alt={`Preview ${idx + 1}`}
+                    className="img-fluid rounded"
+                    style={{
+                      height: "100px",
+                      objectFit: "cover",
+                      width: "100%",
+                    }}
+                  />
+                  {idx === 0 && (
+                    <span className="badge bg-warning text-dark position-absolute top-0 start-0 m-1">
+                      Featured
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger position-absolute bottom-0 end-0 m-1"
+                    onClick={() => removeImage(idx)}
+                  >
+                    <i className="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="d-grid gap-2 mt-4">
         <button
