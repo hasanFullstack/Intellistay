@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AOS from "aos";
 import { getAllHostels } from "../api/hostel.api";
 import { getRoomsByHostel } from "../api/room.api";
+import HostelHero from "../components/HostelHero";
 
 const Home = () => {
   const [hostels, setHostels] = useState([]);
@@ -49,42 +50,7 @@ const Home = () => {
   return (
     <>
       {/* HERO SECTION */}
-      <section
-        className="vh-100 d-flex align-items-center text-white"
-        style={{
-          background:
-            "linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)), url('https://images.unsplash.com/photo-1560448075-bb4caa6c8c91') center/cover",
-        }}
-      >
-        <div className="container text-center" data-aos="fade-up">
-          <h1 className="display-4 fw-bold">Find Your Perfect Hostel</h1>
-          <p className="lead">Affordable stays for students & professionals</p>
-
-          {/* SEARCH BAR */}
-          <div className="row justify-content-center mt-4">
-            <div className="col-md-8 bg-white p-3 rounded shadow">
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <input className="form-control" placeholder="Location" />
-                </div>
-                <div className="col-md-3">
-                  <input type="date" className="form-control" />
-                </div>
-                <div className="col-md-3">
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Budget"
-                  />
-                </div>
-                <div className="col-md-2">
-                  <button className="btn btn-primary w-100">Search</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HostelHero />
 
       {/* FEATURE SECTION */}
       <section className="py-5 bg-light">

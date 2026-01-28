@@ -1,3 +1,8 @@
+@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* Brand Colors */
   --color-primary: #235784;
@@ -28,6 +33,7 @@ a {
   color: var(--color-primary);
   text-decoration: inherit;
 }
+
 a:hover {
   color: var(--color-primary);
   opacity: 0.85;
@@ -58,10 +64,8 @@ button {
     background-color 0.18s ease,
     transform 0.08s ease;
 }
-button:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
-}
+
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
