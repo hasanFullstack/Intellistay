@@ -1,11 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@layer components {
-  .footer-icon {
-    @apply w-10 h-10 rounded-full bg-white text-[#245680] flex items-center justify-center cursor-pointer hover:scale-105 transition;
-  }
-}
+/* Tailwind removed — global CSS below */
+@import "tailwindcss";
+/* Add project global styles here */
 
 :root {
   /* Brand Colors */
