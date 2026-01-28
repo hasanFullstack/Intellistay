@@ -111,3 +111,87 @@ export const cancelBooking = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+
+// Get bookings for owner's hostels
+export const getOwnerBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find()
+      .populate({
+        path: "hostelId",
+        match: { owner: req.user.id },
+        select: "name location",
+      })
+      .populate("roomId", "roomType pricePerBed gender")
+      .populate("userId", "name email");
+
+    // Filter out bookings where hostel is null (doesn't belong to this owner)
+    const ownerBookings = bookings.filter((b) => b.hostelId !== null);
+
+    res.json(ownerBookings);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+// Accept booking (owner)
+export const acceptBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("hostelId")
+      .populate("roomId");
+
+    if (!booking) {
+      return res.status(404).json({ msg: "Booking not found" });
+    }
+
+    // Verify owner owns this hostel
+    if (booking.hostelId.owner.toString() !== req.user.id) {
+      return res.status(403).json({ msg: "Unauthorized" });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({ msg: "Cannot accept a cancelled booking" });
+    }
+
+    booking.status = "confirmed";
+    await booking.save();
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+// Reject/Cancel booking (owner)
+export const rejectBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("hostelId")
+      .populate("roomId");
+
+    if (!booking) {
+      return res.status(404).json({ msg: "Booking not found" });
+    }
+
+    // Verify owner owns this hostel
+    if (booking.hostelId.owner.toString() !== req.user.id) {
+      return res.status(403).json({ msg: "Unauthorized" });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({ msg: "Booking already cancelled" });
+    }
+
+    // Restore room availability
+    const room = await Room.findById(booking.roomId);
+    room.availableBeds += booking.bedsBooked;
+    await room.save();
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};

@@ -5,17 +5,44 @@ import { useAuth } from "../../auth/AuthContext";
 const MyBookings = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getUserBookings(user.id).then((res) => setBookings(res.data));
-  }, []);
+    const loadBookings = async () => {
+      try {
+        if (user?._id) {
+          const res = await getUserBookings(user._id);
+          setBookings(res.data || []);
+        }
+      } catch (err) {
+        console.error("Error loading bookings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBookings();
+  }, [user]);
+
+  if (loading) {
+    return <div>Loading bookings...</div>;
+  }
 
   return (
-    <ul>
-      {bookings.map((b) => (
-        <li key={b._id}>{b.hostelName}</li>
-      ))}
-    </ul>
+    <div>
+      <h3>My Bookings ({bookings.length})</h3>
+      {bookings.length === 0 ? (
+        <p>No bookings found</p>
+      ) : (
+        <ul>
+          {bookings.map((b) => (
+            <li key={b._id}>
+              {b.hostelName} - {b.status}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 

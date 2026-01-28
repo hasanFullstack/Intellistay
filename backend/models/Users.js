@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // owners verified by admin
     },
+
+    quizCompleted: {
+      type: Boolean,
+      default: false, // personality quiz completion status for students
+    },
   },
   { timestamps: true },
 );
