@@ -6,10 +6,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false);
 
-  // Initialize user from sessionStorage on mount
+  // Initialize user from localStorage on mount
   useEffect(() => {
-    const storedUser = sessionStorage.getItem("user");
-    console.log("AuthContext - Stored user from sessionStorage:", storedUser);
+    const storedUser = localStorage.getItem("user");
+    console.log("AuthContext - Stored user from localStorage:", storedUser);
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
@@ -23,8 +23,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = (data) => {
     console.log("AuthContext - Login called with data:", data);
-    sessionStorage.setItem("token", data.token);
-    sessionStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
     console.log("AuthContext - Setting user to:", data.user);
     setUser(data.user);
 
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     console.log("AuthContext - Logout called");
-    sessionStorage.clear();
+    localStorage.clear();
     setUser(null);
     setShowQuiz(false);
   };
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
   const completeQuiz = (updatedUser) => {
     // Update user with completed quiz status
     setUser(updatedUser);
-    sessionStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem("user", JSON.stringify(updatedUser));
     setShowQuiz(false);
   };
 

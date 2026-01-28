@@ -346,7 +346,7 @@ const OwnerDashboard = () => {
                                     <i className="bi bi-plus"></i> Add Room
                                   </button>
                                   <button
-                                    className="inline-flex items-center justify-center w-8 h-8 rounded text-red-600 hover:bg-red-50 transition-colors"
+                                    className="btn-delete"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteHostel(hostel._id);
@@ -354,7 +354,7 @@ const OwnerDashboard = () => {
                                     title="Delete hostel"
                                   >
                                     <i
-                                      className="bi bi-x text-lg"
+                                      className="bi bi-trash"
                                       aria-hidden="true"
                                     ></i>
                                   </button>
@@ -450,7 +450,7 @@ const OwnerDashboard = () => {
                                         <td>Rs {room.pricePerBed}</td>
                                         <td>
                                           <button
-                                            className="inline-flex items-center justify-center w-8 h-8 rounded text-red-600 hover:bg-red-50 transition-colors"
+                                            className="btn-delete"
                                             onClick={() =>
                                               handleDeleteRoom(
                                                 room._id,
@@ -460,7 +460,7 @@ const OwnerDashboard = () => {
                                             title="Delete room"
                                           >
                                             <i
-                                              className="bi bi-x text-lg"
+                                              className="bi bi-trash"
                                               aria-hidden="true"
                                             ></i>
                                           </button>
