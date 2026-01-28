@@ -12,7 +12,7 @@ const Navbar = ({ openAuth }) => {
 
   return (
     <header className="navbar">
-      <div className="navbar__inner">
+      <div className="navbar__inner container mx-auto">
         <div className="navbar__brand">
           <Link to="/" className="navbar__logo">
             <img
