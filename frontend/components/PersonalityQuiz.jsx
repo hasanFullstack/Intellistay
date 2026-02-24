@@ -6,206 +6,176 @@ const PersonalityQuiz = ({ userId, onComplete, onClose }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    socialPreference: "",
-    cleanlinessLevel: "",
-    noiseTolerance: "",
-    studyHabits: "",
-    budgetPreference: "",
-    roommatePreference: "",
-    lifestyle: "",
-    facilitiesImportance: "",
+    eveningRoutine: "",
+    weekendStyle: "",
+    sharedSpaceReaction: "",
+    noiseDuringFocus: "",
+    sleepPattern: "",
+    guestComfort: "",
+    conflictApproach: "",
+    dailyRoutine: "",
+    focusEnvironment: "",
+    sharedRoomComfort: "",
     locationPreference: "",
-    petFriendliness: "",
+    budgetPriority: "",
+    facilityInterest: "",
+    petPreference: "",
   });
 
-  const totalSteps = 10;
+  const totalSteps = 14; // One step per question
 
   const questions = [
     {
-      id: "socialPreference",
-      title: "How social are you?",
+      id: "eveningRoutine",
+      title: "After a long day, you usually:",
       options: [
-        { value: "very_social", label: "Very Social - Love meeting people" },
-        {
-          value: "somewhat_social",
-          label: "Somewhat Social - Enjoy social activities",
-        },
-        {
-          value: "introverted",
-          label: "Introverted - Prefer smaller groups",
-        },
-        {
-          value: "very_introverted",
-          label: "Very Introverted - Prefer solitude",
-        },
+        { value: "hangout_group", label: "Spend time with friends or roommates" },
+        { value: "small_group", label: "Talk with 1–2 close people" },
+        { value: "relax_alone", label: "Relax alone with phone, book, or movie" },
+        { value: "productive_time", label: "Focus on personal work or goals" },
       ],
     },
+
     {
-      id: "cleanlinessLevel",
-      title: "What's your cleanliness preference?",
+      id: "weekendStyle",
+      title: "Your ideal weekend looks like:",
       options: [
-        { value: "very_clean", label: "Very Clean - Spotless environment" },
-        {
-          value: "moderately_clean",
-          label: "Moderately Clean - Regular cleaning",
-        },
-        { value: "average", label: "Average - Basic cleanliness" },
-        {
-          value: "not_concerned",
-          label: "Not Concerned - Flexibility on cleanliness",
-        },
+        { value: "social_outings", label: "Going out or attending gatherings" },
+        { value: "balanced_mix", label: "Mix of social time and relaxing" },
+        { value: "quiet_indoor", label: "Mostly relaxing indoors" },
+        { value: "goal_oriented", label: "Catching up on studies or tasks" },
       ],
     },
+
     {
-      id: "noiseTolerance",
-      title: "How do you feel about noise?",
+      id: "sharedSpaceReaction",
+      title: "If common areas are slightly untidy, you usually:",
       options: [
-        {
-          value: "very_quiet",
-          label: "Very Quiet - Need silent environment",
-        },
-        {
-          value: "somewhat_quiet",
-          label: "Somewhat Quiet - Prefer calm atmosphere",
-        },
-        {
-          value: "moderate",
-          label: "Moderate - Can tolerate normal noise",
-        },
-        {
-          value: "can_handle_loud",
-          label: "Can Handle Loud - Not bothered by noise",
-        },
+        { value: "clean_immediately", label: "Clean it before using" },
+        { value: "clean_my_part", label: "Use it and clean my part only" },
+        { value: "ignore_small_mess", label: "Ignore minor mess and continue" },
+        { value: "not_bothered", label: "It doesn’t really affect me" },
       ],
     },
+
     {
-      id: "studyHabits",
-      title: "Where do you prefer to study?",
+      id: "noiseDuringFocus",
+      title: "When you're resting or focusing and there's background noise, you:",
       options: [
-        {
-          value: "study_in_room",
-          label: "In Room - Focus requires privacy",
-        },
-        {
-          value: "library_preference",
-          label: "Library - Prefer common study spaces",
-        },
-        {
-          value: "flexible",
-          label: "Flexible - Can study anywhere",
-        },
-        {
-          value: "not_regular",
-          label: "Not Regular - Study habits vary",
-        },
+        { value: "easily_disturbed", label: "Get distracted quickly" },
+        { value: "notice_manage", label: "Notice it but manage" },
+        { value: "barely_notice", label: "Barely notice it" },
+        { value: "not_affected", label: "Are not affected at all" },
       ],
     },
+
     {
-      id: "budgetPreference",
-      title: "What's your budget preference?",
+      id: "sleepPattern",
+      title: "On most days, you:",
       options: [
-        {
-          value: "luxury",
-          label: "Luxury - Premium amenities important",
-        },
-        {
-          value: "comfortable",
-          label: "Comfortable - Good quality matters",
-        },
-        {
-          value: "moderate",
-          label: "Moderate - Reasonable pricing",
-        },
-        {
-          value: "budget_conscious",
-          label: "Budget Conscious - Price is primary concern",
-        },
+        { value: "sleep_early", label: "Sleep before 11 PM" },
+        { value: "sleep_midnight", label: "Sleep between 11 PM – 1 AM" },
+        { value: "sleep_late", label: "Sleep after 1 AM" },
+        { value: "irregular_sleep", label: "Have no fixed sleep schedule" },
       ],
     },
+
     {
-      id: "roommatePreference",
-      title: "Roommate preference?",
+      id: "guestComfort",
+      title: "If your roommate invites friends over, you:",
       options: [
-        { value: "single_room", label: "Single Room - Want privacy" },
-        {
-          value: "two_sharing",
-          label: "Two Sharing - Comfortable with 1 roommate",
-        },
-        {
-          value: "multi_sharing",
-          label: "Multi Sharing - Like shared living",
-        },
-        { value: "no_preference", label: "No Preference - Either works" },
+        { value: "prefer_notice", label: "Prefer being informed beforehand" },
+        { value: "occasionally_okay", label: "Are fine once in a while" },
+        { value: "comfortable_with_it", label: "Are generally comfortable" },
+        { value: "enjoy_company", label: "Enjoy having people around" },
       ],
     },
+
     {
-      id: "lifestyle",
-      title: "How would you describe your lifestyle?",
+      id: "conflictApproach",
+      title: "If a small issue happens with a roommate, you usually:",
       options: [
-        {
-          value: "health_conscious",
-          label: "Health Conscious - Fitness & wellness matter",
-        },
-        {
-          value: "balanced",
-          label: "Balanced - Mix of study and relaxation",
-        },
-        {
-          value: "social_active",
-          label: "Social Active - Frequent events & parties",
-        },
-        {
-          value: "work_focused",
-          label: "Work Focused - Studies are priority",
-        },
+        { value: "discuss_directly", label: "Talk about it directly" },
+        { value: "wait_observe", label: "Wait and see if it improves" },
+        { value: "avoid_topic", label: "Avoid discussing it" },
+        { value: "adjust_myself", label: "Adjust yourself instead" },
       ],
     },
+
     {
-      id: "facilitiesImportance",
-      title: "Which facilities are most important?",
+      id: "dailyRoutine",
+      title: "Your daily routine is mostly:",
       options: [
-        {
-          value: "gym_sports",
-          label: "Gym & Sports - Fitness facilities needed",
-        },
-        {
-          value: "gaming_entertainment",
-          label: "Gaming & Entertainment - Recreation space",
-        },
-        {
-          value: "study_space",
-          label: "Study Space - Quiet study areas",
-        },
-        {
-          value: "basic_comfort",
-          label: "Basic Comfort - Just the essentials",
-        },
+        { value: "structured_planned", label: "Planned and structured" },
+        { value: "semi_structured", label: "Planned but flexible" },
+        { value: "go_with_flow", label: "Go with the flow" },
+        { value: "very_spontaneous", label: "Spontaneous and unpredictable" },
       ],
     },
+
+    {
+      id: "focusEnvironment",
+      title: "When you have an important deadline, you prefer:",
+      options: [
+        { value: "private_quiet_space", label: "A quiet private space" },
+        { value: "library_environment", label: "Library or study hall" },
+        { value: "any_comfortable_spot", label: "Any comfortable place" },
+        { value: "last_minute_style", label: "Work closer to the deadline" },
+      ],
+    },
+
+    {
+      id: "sharedRoomComfort",
+      title: "In shared accommodation, what matters most?",
+      options: [
+        { value: "personal_space", label: "Having personal space respected" },
+        { value: "clear_routines", label: "Clear understanding of routines" },
+        { value: "friendly_environment", label: "Friendly and interactive vibe" },
+        { value: "flexible_arrangement", label: "Flexibility and freedom" },
+      ],
+    },
+
     {
       id: "locationPreference",
-      title: "Location preference?",
+      title: "Which type of area would suit you best?",
       options: [
-        { value: "city_center", label: "City Center - Urban lifestyle" },
-        { value: "near_campus", label: "Near Campus - Close to college" },
-        { value: "quiet_area", label: "Quiet Area - Away from hustle" },
-        { value: "no_preference", label: "No Preference - Any location" },
+        { value: "urban_lively", label: "Busy and lively area" },
+        { value: "near_campus_or_office", label: "Close to university or offices" },
+        { value: "quiet_residential", label: "Calm residential neighborhood" },
+        { value: "flexible_location", label: "Open to different areas" },
       ],
     },
+
     {
-      id: "petFriendliness",
-      title: "Pet-friendly environment?",
+      id: "budgetPriority",
+      title: "When choosing accommodation, what matters most?",
       options: [
-        { value: "love_pets", label: "Love Pets - Want pet-friendly hostel" },
-        {
-          value: "ok_with_pets",
-          label: "OK With Pets - No problem if allowed",
-        },
-        {
-          value: "no_preference",
-          label: "No Preference - Pets don't matter",
-        },
-        { value: "no_pets", label: "No Pets - Prefer pet-free hostel" },
+        { value: "premium_comfort", label: "Premium comfort and amenities" },
+        { value: "balanced_quality", label: "Good quality at reasonable cost" },
+        { value: "affordable_pricing", label: "Affordable pricing" },
+        { value: "basic_essentials", label: "Just basic essentials" },
+      ],
+    },
+
+    {
+      id: "facilityInterest",
+      title: "Which facility would improve your stay the most?",
+      options: [
+        { value: "fitness_facilities", label: "Gym or sports facilities" },
+        { value: "entertainment_space", label: "Gaming or entertainment areas" },
+        { value: "quiet_study_space", label: "Dedicated quiet study rooms" },
+        { value: "minimal_needs", label: "I only need basic facilities" },
+      ],
+    },
+
+    {
+      id: "petPreference",
+      title: "Living in a pet-friendly place:",
+      options: [
+        { value: "love_pets", label: "Sounds great" },
+        { value: "okay_with_pets", label: "Is fine with me" },
+        { value: "neutral_about_pets", label: "Doesn’t matter much" },
+        { value: "prefer_no_pets", label: "I prefer no pets around" },
       ],
     },
   ];
@@ -220,6 +190,7 @@ const PersonalityQuiz = ({ userId, onComplete, onClose }) => {
   };
 
   const handleNext = () => {
+    // Check if current question is answered before moving to next
     if (!formData[currentQuestion.id]) {
       alert("Please select an option before proceeding");
       return;
@@ -245,7 +216,7 @@ const PersonalityQuiz = ({ userId, onComplete, onClose }) => {
 
     setLoading(true);
     try {
-      const response = await submitPersonalityQuiz(userId, formData);
+      const response = await submitPersonalityQuiz(formData);
       console.log("Quiz submitted successfully:", response.data);
       alert(
         "Personality quiz submitted! We'll use this to find the perfect hostel for you.",
@@ -254,8 +225,11 @@ const PersonalityQuiz = ({ userId, onComplete, onClose }) => {
       const updatedUser = { ...response.data.user, quizCompleted: true };
       onComplete(updatedUser);
     } catch (error) {
-      console.error("Error submitting quiz:", error);
-      alert("Error submitting quiz. Please try again.");
+      console.error("Full error object:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error message:", error.message);
+      const errorMsg = error.response?.data?.message || error.message || "Something went wrong";
+      alert(`Error submitting quiz: ${errorMsg}`);
     } finally {
       setLoading(false);
     }

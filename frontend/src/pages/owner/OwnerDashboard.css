@@ -216,6 +216,9 @@
 .accordion-toggle-icon.open i {
   transform: rotate(180deg);
 }
+.owner-dashboard .accordion-collapse.collapse {
+  visibility: visible;
+}
 .btn-delete {
   color: #dc3545; /* Bootstrap red */
   font-size: 1.2rem;

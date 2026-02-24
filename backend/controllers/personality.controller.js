@@ -1,46 +1,57 @@
-import PersonalityQuiz from "../models/PersonalityQuiz.js";
 import User from "../models/Users.js";
+import PersonalityQuiz from "../models/PersonalityQuiz.js";
+import { calculateBehavioralVector } from "../services/personality.service.js";
 
-// Submit or update personality quiz
+// Submit or update personality quiz (uses req.user from protect middleware)
 export const submitPersonalityQuiz = async (req, res) => {
   try {
-    const { userId, responses } = req.body;
+    const { responses } = req.body;
+    const userId = req.user._id;
 
-    if (!userId || !responses) {
-      return res
-        .status(400)
-        .json({ message: "User ID and responses are required" });
+    if (!responses || Object.keys(responses).length === 0) {
+      return res.status(400).json({ message: "Responses are required" });
     }
 
-    // Verify user exists and is a student
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // Validate that all 14 questions are answered
+    const requiredFields = [
+      'eveningRoutine', 'weekendStyle', 'sharedSpaceReaction', 'noiseDuringFocus',
+      'sleepPattern', 'guestComfort', 'conflictApproach', 'dailyRoutine',
+      'focusEnvironment', 'sharedRoomComfort', 'locationPreference', 'budgetPriority',
+      'facilityInterest', 'petPreference'
+    ];
+
+    const unanswered = requiredFields.filter(field => !responses[field]);
+    if (unanswered.length > 0) {
+      return res.status(400).json({ 
+        message: `Missing responses for: ${unanswered.join(', ')}` 
+      });
     }
 
-    if (user.role !== "student") {
-      return res
-        .status(403)
-        .json({ message: "Only students can complete personality quiz" });
+    // Calculate personality vector from responses
+    const { vector, budgetPreference } = calculateBehavioralVector(responses);
+    
+    if (!vector || vector.length === 0) {
+      return res.status(400).json({ message: "Failed to calculate personality vector" });
     }
 
-    // Calculate personality score based on responses
-    const personalityScore = calculatePersonalityScore(responses);
+    const personalityScore = Math.round((vector.reduce((a, b) => a + b, 0) / vector.length + 2) * (100 / 4));
 
-    // Find existing quiz or create new one
+    // Find or create PersonalityQuiz record
     let quiz = await PersonalityQuiz.findOne({ userId });
-
+    
     if (quiz) {
       // Update existing quiz
       quiz.responses = responses;
+      quiz.personalityVector = vector;
       quiz.personalityScore = personalityScore;
       quiz.profileCompleted = true;
     } else {
       // Create new quiz
       quiz = new PersonalityQuiz({
         userId,
-        email: user.email,
+        email: req.user.email,
         responses,
+        personalityVector: vector,
         personalityScore,
         profileCompleted: true,
       });
@@ -48,88 +59,79 @@ export const submitPersonalityQuiz = async (req, res) => {
 
     await quiz.save();
 
-    // Update user's personality score and mark quiz as completed
-    user.personalityScore = personalityScore;
-    user.quizCompleted = true;
-    await user.save();
+    // Update User model
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        quizCompleted: true,
+        personalityVector: vector,
+        personalityScore,
+        budgetPreference,
+      },
+      { new: true }
+    ).select("-password");
 
     res.status(201).json({
       message: "Personality quiz submitted successfully",
-      quiz,
-      personalityScore,
       user,
+      quiz,
     });
   } catch (error) {
+    console.error("Submit quiz error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get personality quiz for a user
+// Get user's personality quiz (by userId param)
 export const getPersonalityQuiz = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const quiz = await PersonalityQuiz.findOne({ userId });
-
+    const quiz = await PersonalityQuiz.findOne({ userId }).populate("userId", "name email role");
     if (!quiz) {
-      return res.status(404).json({ message: "Personality quiz not found" });
+      return res.status(404).json({ message: "Quiz not found for this user" });
     }
 
-    res.status(200).json(quiz);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Check if user has completed personality quiz
-export const checkQuizCompletion = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    const quiz = await PersonalityQuiz.findOne({ userId });
-
     res.status(200).json({
-      completed: quiz ? quiz.profileCompleted : false,
-      personalityScore: quiz ? quiz.personalityScore : null,
+      quiz,
+      personalityVector: quiz.personalityVector,
+      personalityScore: quiz.personalityScore,
+      responses: quiz.responses,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Calculate personality score (algorithm can be improved with ML later)
-const calculatePersonalityScore = (responses) => {
-  let score = 50; // Base score
+// Check if user has completed quiz
+export const checkQuizCompletion = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
-  // Social preference (+/-10)
-  if (responses.socialPreference === "very_social") score += 10;
-  else if (responses.socialPreference === "very_introverted") score -= 10;
-  else if (responses.socialPreference === "somewhat_social") score += 5;
-  else if (responses.socialPreference === "introverted") score -= 5;
+    const user = await User.findById(userId).select("quizCompleted personalityVector personalityScore");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  // Cleanliness level (+/-8)
-  if (responses.cleanlinessLevel === "very_clean") score += 8;
-  else if (responses.cleanlinessLevel === "not_concerned") score -= 8;
-  else if (responses.cleanlinessLevel === "moderately_clean") score += 4;
-  else if (responses.cleanlinessLevel === "average") score -= 4;
-
-  // Noise tolerance (+/-6)
-  if (responses.noiseTolerance === "can_handle_loud") score += 6;
-  else if (responses.noiseTolerance === "very_quiet") score -= 6;
-  else if (responses.noiseTolerance === "moderate") score += 3;
-
-  // Clamp score between 0 and 100
-  return Math.max(0, Math.min(100, score));
+    res.status(200).json({
+      quizCompleted: user.quizCompleted,
+      personalityVector: user.personalityVector,
+      personalityScore: user.personalityScore,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-// Get all quizzes (for admin/analytics)
+// Get all personality quizzes (admin only)
 export const getAllPersonalityQuizzes = async (req, res) => {
   try {
-    const quizzes = await PersonalityQuiz.find().populate(
-      "userId",
-      "name email",
-    );
-    res.status(200).json(quizzes);
+    const quizzes = await PersonalityQuiz.find().populate("userId", "name email role").sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: quizzes.length,
+      quizzes,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,4 +1,5 @@
 import Hostel from "../models/Hostel.js";
+import HostelEnvironment from "../models/HostelEnvironment.js";
 
 export const addHostel = async (req, res) => {
   try {
@@ -58,7 +59,7 @@ export const updateHostel = async (req, res) => {
       return res.status(404).json({ msg: "Hostel not found" });
     }
 
-    if (hostel.ownerId.toString() !== req.user.id) {
+    if (String(hostel.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
@@ -82,12 +83,31 @@ export const deleteHostel = async (req, res) => {
       return res.status(404).json({ msg: "Hostel not found" });
     }
 
-    if (hostel.ownerId.toString() !== req.user.id) {
+    if (String(hostel.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
+    // Delete hostel
     await Hostel.findByIdAndDelete(req.params.id);
-    res.json({ msg: "Hostel deleted successfully" });
+
+    // Also remove any associated hostel environment profile
+    let envDeletedCount = 0;
+    try {
+      // Use deleteMany to remove all matching environments (handles string/ObjectId variations)
+      const deleteResult = await HostelEnvironment.deleteMany({ 
+        hostelId: req.params.id 
+      });
+      envDeletedCount = deleteResult.deletedCount || 0;
+      console.log(`Deleted ${envDeletedCount} HostelEnvironment document(s) for hostel ${req.params.id}`);
+    } catch (envErr) {
+      console.error("Failed to delete associated HostelEnvironment:", envErr);
+    }
+
+    res.json({ 
+      msg: "Hostel deleted successfully", 
+      environmentDeleted: envDeletedCount > 0,
+      environmentCount: envDeletedCount
+    });
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }

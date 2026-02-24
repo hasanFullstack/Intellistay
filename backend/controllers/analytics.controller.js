@@ -5,7 +5,7 @@ export const ownerAnalytics = async (req, res) => {
     const bookings = await Booking.find().populate("hostelId");
 
     const ownerBookings = bookings.filter(
-      (b) => b.hostelId.ownerId.toString() === req.user.id,
+      (b) => String(b.hostelId?.ownerId) === String(req.user.id),
     );
 
     const totalRevenue = ownerBookings.reduce(

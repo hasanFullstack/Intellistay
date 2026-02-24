@@ -5,7 +5,6 @@ import "./App.css";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/footer";
-import PersonalityQuiz from "../components/PersonalityQuiz";
 import Home from "./pages/Home";
 import Contact from "./pages/Contact";
 import Rooms from "./pages/Rooms";
@@ -13,12 +12,13 @@ import Hostels from "./pages/Hostels";
 import RoomDetail from "./pages/RoomDetail";
 import UserDashboard from "./pages/user/UserDashborad";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
+import PersonalityQuizPage from "./pages/PersonalityQuizPage";
 import AuthModal from "./pages/AuthModal";
 
 import { useState } from "react";
 
 const AppContent = ({ authOpen, setAuthOpen }) => {
-  const { showQuiz, closeQuiz, completeQuiz, user } = useAuth();
+  const { user } = useAuth();
 
   return (
     <>
@@ -27,38 +27,45 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
         <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
       )}
 
-      {showQuiz && user && (
-        <PersonalityQuiz
-          userId={user._id}
-          onComplete={completeQuiz}
-          onClose={closeQuiz}
-        />
-      )}
-
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<AuthModal isOpen={true} onClose={() => {}} />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/rooms" element={<Rooms />} />
         <Route path="/hostels" element={<Hostels />} />
         <Route path="/room/:roomId/:hostelId" element={<RoomDetail />} />
 
+        {/* Personality Quiz - only for students */}
+        <Route
+          path="/personality-quiz"
+          element={
+            <ProtectedRoute role="student" requiresQuiz={false}>
+              <PersonalityQuizPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Dashboard - requires completed quiz */}
         <Route
           path="/dashboard/user"
           element={
-            <ProtectedRoute role="student">
+            <ProtectedRoute role="student" requiresQuiz={true}>
               <UserDashboard />
             </ProtectedRoute>
           }
         />
 
+        {/* Owner Dashboard */}
         <Route
           path="/dashboard/owner"
           element={
-            <ProtectedRoute role="owner">
+            <ProtectedRoute role="owner" requiresQuiz={false}>
               <OwnerDashboard />
             </ProtectedRoute>
           }
         />
+
+        {/* Owner environment quiz is handled inline in dashboard modal */}
       </Routes>
       <Footer />
     </>

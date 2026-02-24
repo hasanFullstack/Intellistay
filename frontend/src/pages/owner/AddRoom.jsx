@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { addRoom } from "../../api/room.api";
+import { toast } from "react-toastify";
 
 const AddRoom = ({ hostelId, onSuccess }) => {
   const [data, setData] = useState({
@@ -39,7 +40,7 @@ const AddRoom = ({ hostelId, onSuccess }) => {
         images: [],
       });
       setPreviewImages([]);
-      alert("Room added successfully!");
+      toast.success("Room added successfully!");
       if (onSuccess) onSuccess();
     } catch (err) {
       setError("Failed to add room. Please try again.");

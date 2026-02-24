@@ -2,12 +2,18 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    name: String,
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
     email: {
       type: String,
       unique: true,
       required: true,
+      trim: true,
+      lowercase: true,
     },
 
     password: {
@@ -17,26 +23,58 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["student", "owner", "admin"], // 👈 admin added
+      enum: ["student", "owner", "admin"],
       default: "student",
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false, // owners need admin verification
+    },
+
+    quizCompleted: {
+      type: Boolean,
+      default: false, // tracks if student completed personality quiz
     },
 
     personalityScore: {
       type: Number,
       default: 50,
+      min: 0,
+      max: 100,
     },
 
-    isVerified: {
-      type: Boolean,
-      default: false, // owners verified by admin
+    personalityVector: {
+      type: [Number], // optional: normalized vector for matching
+      default: [],
     },
 
-    quizCompleted: {
-      type: Boolean,
-      default: false, // personality quiz completion status for students
+    // Optional: store additional preferences here if needed for matching
+    locationPreference: {
+      type: String,
+      enum: [
+        "urban_lively",
+        "near_campus_or_office",
+        "quiet_residential",
+        "flexible_location",
+      ],
+    },
+    budgetPreference: {
+      type: String,
+      enum: [
+        "premium_comfort",
+        "balanced_quality",
+        "affordable_pricing",
+        "basic_essentials",
+      ],
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export default mongoose.model("User", userSchema);

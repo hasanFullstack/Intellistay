@@ -9,7 +9,11 @@ import {
 import { useAuth } from "../../auth/AuthContext";
 import AddHostel from "./AddHostel";
 import AddRoom from "./AddRoom";
+import OwnerEnvironmentModal from "./OwnerEnvironmentModal";
 import "./OwnerDashboard.css";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
@@ -23,6 +27,11 @@ const OwnerDashboard = () => {
   const [selectedHostelId, setSelectedHostelId] = useState(null);
   const [expandedHostelId, setExpandedHostelId] = useState(null);
   const [activeTab, setActiveTab] = useState("hostels");
+  const [showEnvModal, setShowEnvModal] = useState(false);
+  const [envHostelId, setEnvHostelId] = useState(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'hostel'|'room', id, hostelId, name }
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const loadHostels = async () => {
     try {
@@ -70,33 +79,36 @@ const OwnerDashboard = () => {
     });
   };
 
-  const handleDeleteRoom = async (roomId, hostelId) => {
-    if (window.confirm("Are you sure you want to delete this room?")) {
-      try {
-        await deleteRoom(roomId);
-        await loadRoomsForHostel(hostelId);
-        alert("Room deleted successfully!");
-      } catch (err) {
-        alert("Failed to delete room");
-        console.error(err);
-      }
-    }
+  const handleDeleteRoom = (roomId, hostelId, name) => {
+    setDeleteTarget({ type: "room", id: roomId, hostelId, name: name || "room" });
+    setDeleteModalVisible(true);
   };
 
-  const handleDeleteHostel = async (hostelId) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this hostel? All rooms will also be deleted.",
-      )
-    ) {
-      try {
-        await deleteHostel(hostelId);
+  const handleDeleteHostel = (hostelId, name) => {
+    setDeleteTarget({ type: "hostel", id: hostelId, name: name || "hostel" });
+    setDeleteModalVisible(true);
+  };
+
+  const performDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      if (deleteTarget.type === "hostel") {
+        await deleteHostel(deleteTarget.id);
         await loadHostels();
-        alert("Hostel deleted successfully!");
-      } catch (err) {
-        alert("Failed to delete hostel");
-        console.error(err);
+        toast.success(`${deleteTarget.name} deleted successfully`);
+      } else if (deleteTarget.type === "room") {
+        await deleteRoom(deleteTarget.id);
+        await loadRoomsForHostel(deleteTarget.hostelId);
+        toast.success(`${deleteTarget.name} deleted successfully`);
       }
+      setDeleteModalVisible(false);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error(err);
+      toast.error(`Failed to delete ${deleteTarget.name}`);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -604,8 +616,13 @@ const OwnerDashboard = () => {
             </div>
             <div className="modal-body">
               <AddHostel
-                onSuccess={() => {
+                onSuccess={(createdHostel) => {
                   setShowAddHostelModal(false);
+                  const hostelId = createdHostel?._id || createdHostel?.id;
+                  if (hostelId) {
+                    setEnvHostelId(hostelId);
+                    setShowEnvModal(true);
+                  }
                   loadHostels();
                 }}
               />
@@ -648,6 +665,28 @@ const OwnerDashboard = () => {
 
       {showAddHostelModal && <div className="modal-backdrop fade show"></div>}
       {showAddRoomModal && <div className="modal-backdrop fade show"></div>}
+      {showEnvModal && envHostelId && (
+        <OwnerEnvironmentModal
+          hostelId={envHostelId}
+          onClose={(saved) => {
+            setShowEnvModal(false);
+            setEnvHostelId(null);
+            if (saved) loadHostels();
+          }}
+        />
+      )}
+      <DeleteConfirmModal
+        visible={deleteModalVisible}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={performDelete}
+        itemName={deleteTarget?.name}
+        confirmLoading={deleteLoading}
+      />
+
+      <ToastContainer position="top-right" />
     </main>
   );
 };

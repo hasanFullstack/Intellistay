@@ -12,7 +12,7 @@ export const addRoom = async (req, res) => {
     if (!hostel) {
       return res.status(404).json({ msg: "Hostel not found" });
     }
-    if (hostel.ownerId.toString() !== req.user.id) {
+    if (String(hostel.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
@@ -66,7 +66,7 @@ export const updateRoom = async (req, res) => {
     }
 
     const hostel = await Hostel.findById(room.hostelId);
-    if (hostel.ownerId.toString() !== req.user.id) {
+    if (String(hostel.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
@@ -90,7 +90,7 @@ export const deleteRoom = async (req, res) => {
     }
 
     const hostel = await Hostel.findById(room.hostelId);
-    if (hostel.ownerId.toString() !== req.user.id) {
+    if (String(hostel.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 

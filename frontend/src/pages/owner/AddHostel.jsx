@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { addHostel } from "../../api/hostel.api";
+import { toast } from "react-toastify";
 
 const AddHostel = ({ onSuccess }) => {
   const [data, setData] = useState({
@@ -14,6 +15,7 @@ const AddHostel = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
+  
 
   const submit = async (e) => {
     e.preventDefault();
@@ -36,7 +38,9 @@ const AddHostel = ({ onSuccess }) => {
           ? data.amenities.split(",").map((f) => f.trim())
           : [],
       };
-      await addHostel(submitData);
+      const res = await addHostel(submitData);
+      const createdHostel = res?.data || res;
+
       setData({
         name: "",
         location: "",
@@ -47,8 +51,8 @@ const AddHostel = ({ onSuccess }) => {
         images: [],
       });
       setPreviewImages([]);
-      alert("Hostel added successfully! Now add rooms to this hostel.");
-      if (onSuccess) onSuccess();
+      toast.success("Hostel added successfully! Now add rooms to this hostel.");
+      if (onSuccess) onSuccess(createdHostel);
     } catch (err) {
       setError("Failed to add hostel. Please try again.");
       console.error(err);

@@ -10,70 +10,51 @@ const personalityQuizSchema = new mongoose.Schema(
     },
     email: String,
     responses: {
-      // Question 1: Social preference
-      socialPreference: {
-        type: String,
-        enum: [
-          "very_social",
-          "somewhat_social",
-          "introverted",
-          "very_introverted",
-        ],
-      },
-      // Question 2: Cleanliness level
-      cleanlinessLevel: {
-        type: String,
-        enum: ["very_clean", "moderately_clean", "average", "not_concerned"],
-      },
-      // Question 3: Noise tolerance
-      noiseTolerance: {
-        type: String,
-        enum: ["very_quiet", "somewhat_quiet", "moderate", "can_handle_loud"],
-      },
-      // Question 4: Study habits
-      studyHabits: {
-        type: String,
-        enum: [
-          "study_in_room",
-          "library_preference",
-          "flexible",
-          "not_regular",
-        ],
-      },
-      // Question 5: Budget preference
-      budgetPreference: {
-        type: String,
-        enum: ["luxury", "comfortable", "moderate", "budget_conscious"],
-      },
-      // Question 6: Roommate preference
-      roommatePreference: {
-        type: String,
-        enum: ["single_room", "two_sharing", "multi_sharing", "no_preference"],
-      },
-      // Question 7: Lifestyle
-      lifestyle: {
-        type: String,
-        enum: ["health_conscious", "balanced", "social_active", "work_focused"],
-      },
-      // Question 8: Facilities importance
-      facilitiesImportance: {
-        type: String,
-        enum: [
-          "gym_sports",
-          "gaming_entertainment",
-          "study_space",
-          "basic_comfort",
-        ],
-      },
-      // Question 9: Location preference
+      eveningRoutine: { type: String },
+      weekendStyle: { type: String },
+      sharedSpaceReaction: { type: String },
+      noiseDuringFocus: { type: String },
+      sleepPattern: { type: String },
+      guestComfort: { type: String },
+      conflictApproach: { type: String },
+      dailyRoutine: { type: String },
+      focusEnvironment: { type: String },
+      sharedRoomComfort: { type: String },
       locationPreference: {
         type: String,
-        enum: ["city_center", "near_campus", "quiet_area", "no_preference"],
+        enum: [
+          "urban_lively",
+          "near_campus_or_office",
+          "quiet_residential",
+          "flexible_location",
+        ],
       },
-      // Question 10: Pet friendliness
-      petFriendliness: {
+      budgetPriority: {
         type: String,
-        enum: ["love_pets", "ok_with_pets", "no_preference", "no_pets"],
+        enum: [
+          "premium_comfort",
+          "balanced_quality",
+          "affordable_pricing",
+          "basic_essentials",
+        ],
+      },
+      facilityInterest: {
+        type: String,
+        enum: [
+          "fitness_facilities",
+          "entertainment_space",
+          "quiet_study_space",
+          "minimal_needs",
+        ],
+      },
+      petPreference: {
+        type: String,
+        enum: [
+          "love_pets",
+          "okay_with_pets",
+          "neutral_about_pets",
+          "prefer_no_pets",
+        ],
       },
     },
     personalityScore: {
@@ -82,12 +63,16 @@ const personalityQuizSchema = new mongoose.Schema(
       min: 0,
       max: 100,
     },
+    personalityVector: {
+      type: [Number], // optional: store normalized vector for ML/matching
+      default: [],
+    },
     profileCompleted: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export default mongoose.model("PersonalityQuiz", personalityQuizSchema);

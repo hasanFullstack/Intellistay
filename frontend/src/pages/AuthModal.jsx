@@ -18,11 +18,18 @@ const AuthModal = ({ isOpen, onClose }) => {
       if (isLogin) {
         const res = await loginApi(form);
         login(res.data);
-        navigate(
-          res.data.user.role === "owner"
-            ? "/dashboard/owner"
-            : "/dashboard/user",
-        );
+        
+        // Smart redirect based on role and quiz completion
+        const user = res.data.user;
+        if (user.role === "student" && !user.quizCompleted) {
+          navigate("/personality-quiz");
+        } else if (user.role === "student") {
+          navigate("/dashboard/user");
+        } else if (user.role === "owner") {
+          navigate("/dashboard/owner");
+        } else {
+          navigate("/"); // admin or other roles
+        }
       } else {
         await registerApi(form);
         alert("Registered successfully. Please login now.");

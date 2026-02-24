@@ -18,7 +18,7 @@ export const createBooking = async (req, res) => {
       return res.status(404).json({ msg: "Room not found" });
     }
 
-    if (room.hostelId.toString() !== hostelId) {
+    if (String(room.hostelId) !== String(hostelId)) {
       return res
         .status(400)
         .json({ msg: "Room does not belong to this hostel" });
@@ -90,7 +90,7 @@ export const cancelBooking = async (req, res) => {
       return res.status(404).json({ msg: "Booking not found" });
     }
 
-    if (booking.userId.toString() !== req.user.id) {
+    if (String(booking.userId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
@@ -118,7 +118,7 @@ export const getOwnerBookings = async (req, res) => {
     const bookings = await Booking.find()
       .populate({
         path: "hostelId",
-        match: { owner: req.user.id },
+        match: { ownerId: req.user.id },
         select: "name location",
       })
       .populate("roomId", "roomType pricePerBed gender")
@@ -145,7 +145,7 @@ export const acceptBooking = async (req, res) => {
     }
 
     // Verify owner owns this hostel
-    if (booking.hostelId.owner.toString() !== req.user.id) {
+    if (String(booking.hostelId?.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
@@ -174,7 +174,7 @@ export const rejectBooking = async (req, res) => {
     }
 
     // Verify owner owns this hostel
-    if (booking.hostelId.owner.toString() !== req.user.id) {
+    if (String(booking.hostelId?.ownerId) !== String(req.user.id)) {
       return res.status(403).json({ msg: "Unauthorized" });
     }
 
