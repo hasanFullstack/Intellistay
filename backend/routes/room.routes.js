@@ -5,6 +5,7 @@ import {
   getRoomById,
   updateRoom,
   deleteRoom,
+  getRoomSuggestedPrice,
 } from "../controllers/room.controller.js";
 import { protect, allowRoles } from "../middleware/role.middleware.js";
 
@@ -18,5 +19,6 @@ router.get("/:roomId", getRoomById);
 router.post("/hostel/:hostelId", protect, allowRoles("owner"), addRoom);
 router.put("/:roomId", protect, allowRoles("owner"), updateRoom);
 router.delete("/:roomId", protect, allowRoles("owner"), deleteRoom);
+router.get("/:id/suggested-price", protect, allowRoles("owner"), getRoomSuggestedPrice);
 
 export default router;

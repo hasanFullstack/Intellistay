@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { getMyHostels, deleteHostel } from "../../api/hostel.api";
-import { getRoomsByHostel, deleteRoom } from "../../api/room.api";
+import {
+  getRoomsByHostel,
+  deleteRoom,
+  getRoomSuggestedPrice,
+  updateRoom,
+} from "../../api/room.api";
 import {
   getOwnerBookings,
   acceptBooking,
@@ -32,6 +37,12 @@ const OwnerDashboard = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'hostel'|'room', id, hostelId, name }
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // AI Pricing State
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [pricingData, setPricingData] = useState(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [pricingTargetRoom, setPricingTargetRoom] = useState(null);
 
   const loadHostels = async () => {
     try {
@@ -77,6 +88,36 @@ const OwnerDashboard = () => {
       }
       return willExpand ? hostelId : null;
     });
+  };
+
+  const handleGetAIPricing = async (roomId, hostelId, currentPrice) => {
+    setPricingTargetRoom({ id: roomId, hostelId });
+    setPricingData(null);
+    setShowPricingModal(true);
+    setPricingLoading(true);
+
+    try {
+      const res = await getRoomSuggestedPrice(roomId);
+      setPricingData(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.msg || "Failed to fetch AI pricing");
+      setShowPricingModal(false);
+    } finally {
+      setPricingLoading(false);
+    }
+  };
+
+  const handleApplyAIPricing = async () => {
+    if (!pricingTargetRoom || !pricingData) return;
+
+    try {
+      await updateRoom(pricingTargetRoom.id, { pricePerBed: pricingData.suggested_price });
+      toast.success(`Price updated to Rs ${pricingData.suggested_price}`);
+      setShowPricingModal(false);
+      loadRoomsForHostel(pricingTargetRoom.hostelId); // refresh room list
+    } catch (err) {
+      toast.error("Failed to update price");
+    }
   };
 
   const handleDeleteRoom = (roomId, hostelId, name) => {
@@ -333,18 +374,16 @@ const OwnerDashboard = () => {
                                 </div>
                                 <div className="col-md-3 text-end">
                                   <span
-                                    className={`accordion-toggle-icon me-2 ${
-                                      expandedHostelId === hostel._id
-                                        ? "open"
-                                        : ""
-                                    }`}
+                                    className={`accordion-toggle-icon me-2 ${expandedHostelId === hostel._id
+                                      ? "open"
+                                      : ""
+                                      }`}
                                   >
                                     <i
-                                      className={`bi ${
-                                        expandedHostelId === hostel._id
-                                          ? "bi-chevron-up"
-                                          : "bi-chevron-down"
-                                      }`}
+                                      className={`bi ${expandedHostelId === hostel._id
+                                        ? "bi-chevron-up"
+                                        : "bi-chevron-down"
+                                        }`}
                                     ></i>
                                   </span>
                                   <button
@@ -450,16 +489,34 @@ const OwnerDashboard = () => {
                                         <td>{room.totalBeds}</td>
                                         <td>
                                           <span
-                                            className={`badge ${
-                                              room.availableBeds > 0
-                                                ? "bg-success"
-                                                : "bg-danger"
-                                            }`}
+                                            className={`badge ${room.availableBeds > 0
+                                              ? "bg-success"
+                                              : "bg-danger"
+                                              }`}
                                           >
                                             {room.availableBeds}
                                           </span>
                                         </td>
-                                        <td>Rs {room.pricePerBed}</td>
+                                        <td>
+                                          <div className="d-flex align-items-center">
+                                            <span>Rs {room.pricePerBed}</span>
+                                            <button
+                                              className="btn btn-sm ms-2 text-white shadow-sm fw-bold px-3 py-1"
+                                              style={{
+                                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                                border: 'none',
+                                                borderRadius: '20px',
+                                                transition: 'all 0.2s ease-in-out'
+                                              }}
+                                              onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(168, 85, 247, 0.4)'; }}
+                                              onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
+                                              onClick={() => handleGetAIPricing(room._id, hostel._id, room.pricePerBed)}
+                                              title="Optimize with AI"
+                                            >
+                                              <i className="bi bi-magic me-1"></i> AI Price
+                                            </button>
+                                          </div>
+                                        </td>
                                         <td>
                                           <button
                                             className="btn-delete"
@@ -557,13 +614,12 @@ const OwnerDashboard = () => {
                           </td>
                           <td>
                             <span
-                              className={`badge ${
-                                booking.status === "confirmed"
-                                  ? "bg-success"
-                                  : booking.status === "pending"
-                                    ? "bg-warning"
-                                    : "bg-danger"
-                              }`}
+                              className={`badge ${booking.status === "confirmed"
+                                ? "bg-success"
+                                : booking.status === "pending"
+                                  ? "bg-warning"
+                                  : "bg-danger"
+                                }`}
                             >
                               {booking.status}
                             </span>
@@ -675,6 +731,87 @@ const OwnerDashboard = () => {
           }}
         />
       )}
+
+      {/* AI Pricing Modal */}
+      <div className={`modal fade ${showPricingModal ? "show" : ""}`} style={{ display: showPricingModal ? "block" : "none", backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(3px)' }} tabIndex="-1">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+            <div className="modal-header text-white border-bottom-0 px-4 py-3" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)' }}>
+              <h5 className="modal-title fw-bold d-flex align-items-center">
+                <i className="bi bi-stars me-2 fs-4 text-warning"></i> IntelliStay AI Optimizer
+              </h5>
+              <button type="button" className="btn-close btn-close-white opacity-75" onClick={() => setShowPricingModal(false)}></button>
+            </div>
+            <div className="modal-body p-4">
+              {pricingLoading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-purple" style={{ color: '#9333ea', width: '3rem', height: '3rem' }} role="status">
+                    <span className="visually-hidden">Calculating...</span>
+                  </div>
+                  <h5 className="mt-4 fw-bold text-dark">Analyzing market data...</h5>
+                  <p className="text-muted mb-0 small">Evaluating amenities, city tier, and seasonal trends</p>
+                </div>
+              ) : pricingData ? (
+                <div>
+                  <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <span className="text-muted fw-semibold">Current Base Price</span>
+                    <strong className="text-dark fs-5">Rs {pricingData.base_price}/month</strong>
+                  </div>
+
+                  <div className="p-4 rounded-4 text-center mb-4 position-relative" style={{ background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', border: '1px solid #e2e8f0' }}>
+                    <div className="text-purple fw-bold mb-2 text-uppercase tracking-wider small" style={{ color: '#7c3aed', letterSpacing: '1px' }}>Optimal Target Price</div>
+                    <div className="display-4 fw-bolder mb-3" style={{ color: '#0f172a' }}>
+                      Rs {pricingData.suggested_price}
+                    </div>
+
+                    <span
+                      className="badge rounded-pill px-3 py-2 fs-6 shadow-sm"
+                      style={{
+                        backgroundColor: pricingData.price_change_percent > 0 ? '#dcfce7' : pricingData.price_change_percent < 0 ? '#fee2e2' : '#f1f5f9',
+                        color: pricingData.price_change_percent > 0 ? '#166534' : pricingData.price_change_percent < 0 ? '#991b1b' : '#334155',
+                        border: `1px solid ${pricingData.price_change_percent > 0 ? '#bbf7d0' : pricingData.price_change_percent < 0 ? '#fecaca' : '#e2e8f0'}`
+                      }}
+                    >
+                      <i className={`bi ${pricingData.price_change_percent > 0 ? 'bi-graph-up-arrow' : pricingData.price_change_percent < 0 ? 'bi-graph-down-arrow' : 'bi-dash'} me-2`}></i>
+                      {pricingData.price_change_percent > 0 ? '+' : ''}{pricingData.price_change_percent}% adjustment
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-4 d-flex align-items-start" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <div className="rounded-circle p-2 bg-white shadow-sm me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px', minWidth: '40px' }}>
+                      <i className="bi bi-lightning-charge-fill text-success fs-5"></i>
+                    </div>
+                    <div>
+                      <strong className="text-success d-block mb-1">AI Reasoning</strong>
+                      <p className="mb-0 text-success text-opacity-75 small fw-medium">{pricingData.reasoning}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-danger py-4">
+                  <i className="bi bi-exclamation-triangle-fill display-4 text-danger opacity-50 mb-3"></i>
+                  <h5 className="fw-bold">Analysis Failed</h5>
+                  <p className="text-muted mb-0">Our AI couldn't calculate a price for this room right now.</p>
+                </div>
+              )}
+            </div>
+            {pricingData && !pricingLoading && (
+              <div className="modal-footer border-top-0 px-4 pb-4 pt-2">
+                <button type="button" className="btn btn-light fw-bold text-muted px-4" onClick={() => setShowPricingModal(false)} style={{ borderRadius: '8px' }}>Dismiss</button>
+                <button
+                  type="button"
+                  className="btn btn-primary px-4 fw-bold shadow-sm"
+                  style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)', border: 'none', borderRadius: '8px' }}
+                  onClick={handleApplyAIPricing}
+                >
+                  Apply Optimal Price
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <DeleteConfirmModal
         visible={deleteModalVisible}
         onCancel={() => {
