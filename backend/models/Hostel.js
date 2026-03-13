@@ -19,6 +19,10 @@ const hostelSchema = new mongoose.Schema(
     amenities: [String],
     images: [String],
     rules: String,
+    viewCount: {
+      type: Number,
+      default: 0,
+    },
     environmentScore: {
       type: Number,
       default: 50,

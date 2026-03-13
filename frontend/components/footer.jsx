@@ -14,7 +14,7 @@ const Footer = () => {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <img
-              src="../public/logo.png"
+              src="/logo.png"
               alt="INTELLISTAY Logo"
               className="navbar__logo-img"
             />
