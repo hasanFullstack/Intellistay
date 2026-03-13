@@ -1,5 +1,6 @@
 import Room from "../models/Room.js";
 import Hostel from "../models/Hostel.js";
+import { getSuggestedPrice } from "../services/pricing.service.js";
 
 export const addRoom = async (req, res) => {
   try {
@@ -98,5 +99,24 @@ export const deleteRoom = async (req, res) => {
     res.json({ msg: "Room deleted successfully" });
   } catch (error) {
     res.status(500).json({ msg: error.message });
+  }
+};
+
+export const getRoomSuggestedPrice = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id);
+    if (!room) return res.status(404).json({ msg: "Room not found" });
+
+    const hostel = await Hostel.findById(room.hostelId);
+
+    // Ensure only the owner can request the price
+    if (String(hostel.ownerId) !== String(req.user.id)) {
+      return res.status(403).json({ msg: "Unauthorized" });
+    }
+
+    const result = await getSuggestedPrice(room, hostel);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ msg: "AI service unavailable: " + err.message });
   }
 };
