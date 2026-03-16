@@ -63,6 +63,7 @@
   font-size: 1rem;
   transition: all 0.3s ease;
   background: white;
+  color: black;
 }
 
 .search-input:focus {
@@ -169,7 +170,6 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  color: white;
   line-height: 1.3;
 }
 
