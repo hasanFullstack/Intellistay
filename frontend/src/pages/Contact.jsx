@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./Contact.css";
 import ContactSection from "../../components/ContactSection";
+import { toast } from "react-toastify";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -24,13 +25,11 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      // You can connect this to a backend API endpoint
-      console.log("Form submitted:", formData);
-      setSubmitted(true);
+      toast.success("Message sent! We'll get back to you soon.");
       setFormData({ name: "", email: "", message: "" });
       setTimeout(() => setSubmitted(false), 5000);
     } catch (error) {
-      console.error("Error submitting form:", error);
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
     }

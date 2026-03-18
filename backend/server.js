@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import bcryptjs from "bcryptjs";
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/auth.routes.js";
@@ -10,24 +9,42 @@ import roomRoutes from "./routes/room.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import personalityRoutes from "./routes/personality.routes.js";
 import hostelEnvironmentRoutes from "./routes/hostelEnvironment.routes.js";
+import recommendationRoutes from "./routes/recommendation.routes.js";
+import studentRoutes from "./routes/student.routes.js";
+
+import { securityHeaders, authLimiter, apiLimiter } from "./middleware/security.middleware.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-app.use(cors());
+// Security middleware
+app.use(securityHeaders);
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+}));
 app.use(express.json({ limit: "10mb" }));
 
-app.use("/api/auth", authRoutes);
+// Global rate limiter
+app.use("/api", apiLimiter);
+
+// Routes (auth has its own stricter rate limiter)
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/hostels", hostelRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/personality", personalityRoutes);
 app.use("/api/hostel-environment", hostelEnvironmentRoutes);
+app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/students", studentRoutes);
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 app.listen(
   process.env.PORT,
   () => console.log(`Server running on port ${process.env.PORT}`),
-  console.log(bcryptjs.hashSync("admin123", 10)),
 );

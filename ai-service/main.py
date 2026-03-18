@@ -21,7 +21,11 @@ app.add_middleware(
 )
 
 # Load the trained ML model on startup
-MODEL_PATH = "pricing_model.pkl"
+# DB-DRIVEN MODEL (trained from MongoDB data):
+# MODEL_PATH = "pricing_model_db.pkl"
+
+# DATASET-DRIVEN MODEL (trained from synthetic dataset - ACTIVE):
+MODEL_PATH = "pricing_model_dataset.pkl"
 model = None
 
 @app.on_event("startup")
@@ -35,12 +39,29 @@ async def load_model():
 
 # Define the expected input schema
 class PricingInput(BaseModel):
+    # Required old fields (Sent by the existing React Frontend)
     occupancy_rate: float = Field(..., ge=0.0, le=1.0, description="Percentage of occupied beds (0.0 to 1.0)")
     total_beds: int = Field(..., ge=1, description="Total beds in the room")
     base_price: float = Field(..., ge=0, description="The base monthly price set by owner")
     month: int = Field(..., ge=1, le=12, description="Month of the year (1-12)")
-    amenity_score: int = Field(..., ge=0, le=10, description="Number of amenities provided (0-10)")
     city_tier: int = Field(..., ge=1, le=3, description="1=Major, 2=Medium, 3=Small city")
+    
+    # Optional New Dataset Features (So the frontend doesn't break if it doesn't send them)
+    # The amenity_score is kept for backward compatibility with the frontend payload, but we don't use it in the new model directly
+    amenity_score: int = Field(default=3, ge=0, le=10, description="Legacy amenity count")
+    
+    distance_to_university: float = Field(default=3.0, description="km to nearest university")
+    student_rating: float = Field(default=4.0, description="Average student rating 1.0-5.0")
+    has_ac: int = Field(default=0, description="1 if AC exists, 0 otherwise")
+    has_wifi: int = Field(default=1, description="1 if WiFi exists, 0 otherwise")
+    is_weekend: int = Field(default=0, description="1 if weekend, 0 otherwise")
+    competitor_avg_price: float = Field(default=-1.0, description="Local market average")
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # If the frontend didn't send a competitor price, just assume it's roughly the base price
+        if getattr(self, "competitor_avg_price", -1.0) == -1.0:
+            self.competitor_avg_price = self.base_price
 
 @app.post("/predict-price", summary="Predict optimal dynamic price for a room")
 async def predict_price(data: PricingInput):
@@ -48,15 +69,37 @@ async def predict_price(data: PricingInput):
         raise HTTPException(status_code=503, detail="ML Model is not loaded into memory")
         
     try:
-        # Format features exactly as the model was trained
-        # ['occupancy_rate', 'total_beds', 'base_price', 'month', 'amenity_score', 'city_tier']
+        # ---------------------------------------------------------
+        # OLD LOGIC (DB MODEL):
+        # ---------------------------------------------------------
+        # features = np.array([[
+        #     data.occupancy_rate,
+        #     data.total_beds,
+        #     data.base_price,
+        #     data.month,
+        #     data.amenity_score,
+        #     data.city_tier
+        # ]])
+        
+        # ---------------------------------------------------------
+        # NEW LOGIC (DATASET MODEL):
+        # Order MUST match train_from_dataset.py features:
+        # ['base_price', 'total_beds', 'occupancy_rate', 'month', 'city_tier', 
+        #  'distance_to_university', 'student_rating', 'has_ac', 'has_wifi', 
+        #  'is_weekend', 'competitor_avg_price']
+        # ---------------------------------------------------------
         features = np.array([[
-            data.occupancy_rate,
-            data.total_beds,
             data.base_price,
+            data.total_beds,
+            data.occupancy_rate,
             data.month,
-            data.amenity_score,
-            data.city_tier
+            data.city_tier,
+            data.distance_to_university,
+            data.student_rating,
+            data.has_ac,
+            data.has_wifi,
+            data.is_weekend,
+            data.competitor_avg_price
         ]])
         
         # Make Prediction
@@ -68,16 +111,18 @@ async def predict_price(data: PricingInput):
         # Calculate percentage difference
         diff_percent = ((suggested_price - data.base_price) / max(data.base_price, 1)) * 100
         
-        # Generate human-readable reasoning
-        reason = "Base price."
-        if diff_percent > 10:
-            reason = "High demand surcharge (High occupancy / Peak season)."
+        # Generate human-readable reasoning based on the new premium dataset variables
+        reason = "Base price based on standard market rates."
+        if data.distance_to_university < 2.0 and data.has_ac == 1:
+            reason = "Significant premium suggested due to AC availability and prime proximity (<2km) to university."
+        elif diff_percent > 10:
+            reason = "High demand surcharge (High occupancy / Peak season / Favorable market position)."
         elif diff_percent < -10:
-            reason = "Discount suggested to attract bookings (Low occupancy / Off-peak season)."
+            reason = "Discount suggested to attract bookings (Low occupancy / Market competition)."
         elif diff_percent > 0:
-            reason = "Slight premium recommended."
+            reason = "Slight premium recommended based on local area averages."
         elif diff_percent < 0:
-            reason = "Slight discount recommended."
+            reason = "Slight discount recommended to stay competitive."
             
         return {
             "suggested_price": suggested_price,

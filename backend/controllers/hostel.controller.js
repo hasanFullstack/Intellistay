@@ -3,6 +3,7 @@ import HostelEnvironment from "../models/HostelEnvironment.js";
 import Room from "../models/Room.js";
 import Booking from "../models/Booking.js";
 import { protect } from "../middleware/role.middleware.js";
+import { calculateCompatibilityScore } from "../utils/matchingEngine.js";
 import { cosineSimilarity } from "../utils/cosineSimilarity.js";
 
 export const addHostel = async (req, res) => {
@@ -83,7 +84,7 @@ export const getAllHostels = async (req, res) => {
       return res.json([...sortedByBookings, ...remainingWithScore]);
     }
 
-    // RECOMMENDED: use cosine similarity between student vector and hostel vector
+    // RECOMMENDED: use weighted matching engine between student vector and hostel vector
     if (
       f === "recommended" ||
       f === "recommend" ||
@@ -93,33 +94,23 @@ export const getAllHostels = async (req, res) => {
         ? req.user.personalityVector
         : [];
 
-      // Get all hostels so we can include those without an environment profile
-      const allHostels = await Hostel.find().lean();
-
       const envs = await HostelEnvironment.find({
         profileCompleted: true,
       }).populate("hostelId");
 
-      const envMap = new Map();
-      envs.forEach((env) => {
-        if (env.hostelId)
-          envMap.set(String(env.hostelId._id || env.hostelId), env);
-      });
-
-      const results = allHostels.map((hostel) => {
-        const env = envMap.get(String(hostel._id));
-        const hostelVector =
-          env && Array.isArray(env.hostelVector) ? env.hostelVector : [];
-        const similarity =
-          userVector.length && hostelVector.length
-            ? cosineSimilarity(userVector, hostelVector)
-            : 0;
-        return { ...hostel, similarityScore: similarity };
-      });
-
-      results.sort(
-        (a, b) => (b.similarityScore || 0) - (a.similarityScore || 0),
-      );
+      const results = envs
+        .filter((env) => env.hostelId)
+        .map((env) => {
+          const hostelVector =
+            env && Array.isArray(env.hostelVector) ? env.hostelVector : [];
+          const { score } = calculateCompatibilityScore(userVector, hostelVector);
+          const hostel = env.hostelId.toObject ? env.hostelId.toObject() : env.hostelId;
+          return { ...hostel, similarityScore: score };
+        })
+        .filter((h) => h.similarityScore > 0)
+        .sort(
+          (a, b) => (b.similarityScore || 0) - (a.similarityScore || 0),
+        );
 
       return res.json(results);
     }

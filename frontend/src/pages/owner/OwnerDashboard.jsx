@@ -50,7 +50,7 @@ const OwnerDashboard = () => {
       const res = await getMyHostels();
       setHostels(res.data || []);
     } catch (err) {
-      console.error("Error loading hostels:", err);
+      toast.error("Failed to load hostels");
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ const OwnerDashboard = () => {
         [hostelId]: res.data || [],
       }));
     } catch (err) {
-      console.error("Error loading rooms:", err);
+      toast.error("Failed to load rooms");
     }
   };
 
@@ -74,7 +74,7 @@ const OwnerDashboard = () => {
       const res = await getOwnerBookings();
       setBookings(res.data || []);
     } catch (err) {
-      console.error("Error loading bookings:", err);
+      toast.error("Failed to load bookings");
     } finally {
       setBookingsLoading(false);
     }
@@ -146,8 +146,7 @@ const OwnerDashboard = () => {
       setDeleteModalVisible(false);
       setDeleteTarget(null);
     } catch (err) {
-      console.error(err);
-      toast.error(`Failed to delete ${deleteTarget.name}`);
+      toast.error(`Failed to delete ${deleteTarget?.name || "item"}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -156,11 +155,10 @@ const OwnerDashboard = () => {
   const handleAcceptBooking = async (bookingId) => {
     try {
       await acceptBooking(bookingId);
-      alert("Booking accepted successfully!");
+      toast.success("Booking accepted successfully!");
       loadBookings();
     } catch (err) {
-      alert("Failed to accept booking");
-      console.error(err);
+      toast.error("Failed to accept booking");
     }
   };
 
@@ -168,11 +166,10 @@ const OwnerDashboard = () => {
     if (window.confirm("Are you sure you want to reject this booking?")) {
       try {
         await rejectBooking(bookingId);
-        alert("Booking rejected successfully!");
+        toast.success("Booking rejected successfully!");
         loadBookings();
       } catch (err) {
-        alert("Failed to reject booking");
-        console.error(err);
+        toast.error("Failed to reject booking");
       }
     }
   };

@@ -55,7 +55,6 @@ const AddHostel = ({ onSuccess }) => {
       if (onSuccess) onSuccess(createdHostel);
     } catch (err) {
       setError("Failed to add hostel. Please try again.");
-      console.error(err);
     } finally {
       setLoading(false);
     }

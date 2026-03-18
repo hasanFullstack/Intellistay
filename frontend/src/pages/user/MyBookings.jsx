@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getUserBookings } from "../../api/booking.api";
 import { useAuth } from "../../auth/AuthContext";
+import { toast } from "react-toastify";
 
 const MyBookings = () => {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ const MyBookings = () => {
           setBookings(res.data || []);
         }
       } catch (err) {
-        console.error("Error loading bookings:", err);
+        toast.error("Failed to load bookings");
       } finally {
         setLoading(false);
       }

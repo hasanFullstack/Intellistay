@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   FaFacebookF,
   FaInstagram,
@@ -30,9 +31,10 @@ const Footer = () => {
         <div>
           <h4 className="text-lg font-semibold mb-4 ml-7">Quick links</h4>
           <ul className="space-y-2 text-sm text-gray-200">
-            <li className="hover:text-white cursor-pointer">Home</li>
-            <li className="hover:text-white cursor-pointer">About</li>
-            <li className="hover:text-white cursor-pointer">Rooms</li>
+            <li><Link to="/" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Home</Link></li>
+            <li><Link to="/hostels" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Hostels</Link></li>
+            <li><Link to="/rooms" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Rooms</Link></li>
+            <li><Link to="/contact" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Contact</Link></li>
           </ul>
         </div>
 
@@ -59,18 +61,18 @@ const Footer = () => {
             Follow us on social media.
           </p>
           <div className="flex gap-4">
-            <div className="footer-icon">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="Facebook">
               <FaFacebookF />
-            </div>
-            <div className="footer-icon">
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="Instagram">
               <FaInstagram />
-            </div>
-            <div className="footer-icon">
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="Twitter">
               <FaTwitter />
-            </div>
-            <div className="footer-icon">
+            </a>
+            <a href="https://wa.me/923295807077" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="WhatsApp">
               <FaWhatsapp />
-            </div>
+            </a>
           </div>
         </div>
       </div>

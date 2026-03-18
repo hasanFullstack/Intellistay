@@ -14,6 +14,7 @@ import UserDashboard from "./pages/user/UserDashborad";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import PersonalityQuizPage from "./pages/PersonalityQuizPage";
 import AuthModal from "./pages/AuthModal";
+import NotFound from "./pages/NotFound";
 
 import { useState } from "react";
 
@@ -66,6 +67,9 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
         />
 
         {/* Owner environment quiz is handled inline in dashboard modal */}
+
+        {/* 404 Catch-all */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </>

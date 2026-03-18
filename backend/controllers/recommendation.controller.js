@@ -1,51 +1,104 @@
 import User from "../models/Users.js";
 import HostelEnvironment from "../models/HostelEnvironment.js";
-import Hostel from "../models/Hostel.js";
+import {
+  calculateCompatibilityScore,
+  getStrongMatches,
+  getWeakMatches,
+  checkBudgetAlignment,
+  getMatchLabel,
+} from "../utils/matchingEngine.js";
 
-// Cosine Similarity Function
-const cosineSimilarity = (vecA, vecB) => {
-    const dot = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
-
-    const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
-    const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
-
-    if (magnitudeA === 0 || magnitudeB === 0) return 0;
-
-    return dot / (magnitudeA * magnitudeB);
-};
-
-// Get student recommendations
+// Get student recommendations with rich breakdown
 export const getStudentRecommendations = async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id);
+  try {
+    const user = await User.findById(req.user.id);
 
-        if (!user.quizCompleted || !user.personalityVector) {
-            return res.status(400).json({
-                message: "Complete personality quiz first",
-            });
-        }
-
-        const environments = await HostelEnvironment.find({
-            profileCompleted: true,
-        }).populate("hostelId");
-
-        const recommendations = environments
-            .map((env) => {
-                const similarity = cosineSimilarity(
-                    user.personalityVector,
-                    env.hostelVector
-                );
-
-                return {
-                    hostel: env.hostelId,
-                    similarityScore: similarity,
-                };
-            })
-            .sort((a, b) => b.similarityScore - a.similarityScore)
-            .slice(0, 10);
-
-        res.status(200).json(recommendations);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!user.quizCompleted || !user.personalityVector?.length) {
+      return res.status(400).json({
+        message: "Complete personality quiz first",
+      });
     }
+
+    const environments = await HostelEnvironment.find({
+      profileCompleted: true,
+    }).populate({
+      path: "hostelId",
+      populate: { path: "ownerId", select: "name" },
+    });
+
+    const recommendations = environments
+      .filter((env) => env.hostelId)
+      .map((env) => {
+        const hostelVector = env.hostelVector || [];
+
+        // Use the new weighted matching engine
+        const { score: personalityMatch, breakdown } = calculateCompatibilityScore(
+          user.personalityVector,
+          hostelVector
+        );
+
+        // Budget alignment
+        const budgetResult = checkBudgetAlignment(
+          user.budgetPreference,
+          env.environmentProfile?.budgetTier
+        );
+
+        const totalScore = Math.min(100, personalityMatch + budgetResult.bonus);
+        const matchLabel = getMatchLabel(totalScore);
+
+        // Strong & weak dimensions
+        const strongMatches = getStrongMatches(breakdown);
+        const weakMatches = getWeakMatches(breakdown);
+
+        // Top 3 scoring dimensions for summary
+        const topDimensions = [...breakdown]
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3)
+          .map((d) => ({ label: d.label, score: d.score }));
+
+        return {
+          hostel: {
+            _id: env.hostelId._id,
+            name: env.hostelId.name,
+            location: env.hostelId.location,
+            amenities: env.hostelId.amenities,
+            images: env.hostelId.images,
+            owner: env.hostelId.ownerId?.name || "Unknown",
+          },
+          compatibilityScore: totalScore,
+          matchLabel,
+          breakdown: {
+            personalityMatch,
+            budgetMatch: budgetResult.bonus,
+            budgetAligned: budgetResult.aligned,
+            strongMatches,
+            weakMatches,
+            topDimensions,
+            fullBreakdown: breakdown,
+          },
+          environmentProfile: {
+            socialEnvironment: env.environmentProfile?.socialEnvironment,
+            cleanlinessStandard: env.environmentProfile?.cleanlinessStandard,
+            studyEnvironment: env.environmentProfile?.studyEnvironment,
+            budgetTier: env.environmentProfile?.budgetTier,
+            noiseLevelNight: env.environmentProfile?.noiseLevelNight,
+          },
+        };
+      })
+      .sort((a, b) => b.compatibilityScore - a.compatibilityScore)
+      .slice(0, 10);
+
+    res.status(200).json({
+      count: recommendations.length,
+      userProfile: {
+        name: user.name,
+        personalityScore: user.personalityScore,
+        budgetPreference: user.budgetPreference,
+      },
+      recommendations,
+    });
+  } catch (error) {
+    console.error("Error getting recommendations:", error);
+    res.status(500).json({ message: error.message });
+  }
 };

@@ -3,6 +3,7 @@ import { registerApi, loginApi } from "../api/auth.api";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "./style/auth.css";
+import { toast } from "react-toastify";
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -32,11 +33,11 @@ const AuthModal = ({ isOpen, onClose }) => {
         }
       } else {
         await registerApi(form);
-        alert("Registered successfully. Please login now.");
+        toast.success("Registered successfully. Please login now.");
         setIsLogin(true);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
+      toast.error(err.response?.data?.message || "Something went wrong");
     }
   };
 

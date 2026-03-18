@@ -235,7 +235,6 @@ const OwnerEnvironmentModal = ({ hostelId, onClose }) => {
       Modal.success({ title: "Saved", content: "Hostel environment profile saved." });
       if (onClose) onClose(true);
     } catch (err) {
-      console.error(err);
       setError(err?.response?.data?.message || "Failed to save profile.");
     } finally {
       setLoading(false);

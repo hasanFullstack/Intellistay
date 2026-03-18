@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 const AuthContext = createContext();
 
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
       } catch (e) {
-        console.error("Failed to parse stored user:", e);
+        toast.error("Failed to restore user session");
       }
     }
   }, []);

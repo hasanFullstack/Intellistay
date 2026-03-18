@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllHostels } from "../api/hostel.api";
 import { Select } from "antd";
 import "antd/dist/antd.css";
 import "./Hostels.css";
 import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
+import { toast } from "react-toastify";
 
 const Hostels = () => {
+  const navigate = useNavigate();
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,7 +29,7 @@ const Hostels = () => {
       setHostels(res.data || []);
       setFilteredHostels(res.data || []);
     } catch (err) {
-      console.error("Error loading hostels:", err);
+      toast.error("Failed to load hostels");
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,7 @@ const Hostels = () => {
         const data = res.data || [];
         setFilteredHostels(data.filter(matchesSearch));
       } catch (err) {
-        console.error("Filter request failed:", err);
+        toast.error("Filter request failed");
       } finally {
         setLoading(false);
       }
@@ -267,7 +270,7 @@ const Hostels = () => {
 
                   {/* Card Footer */}
                   <div className="card-footer-section">
-                    <button className="btn-view-rooms">
+                    <button className="btn-view-rooms" onClick={() => navigate(`/rooms?hostel=${hostel._id}`)}>
                       <i className="bi bi-door-open"></i>
                       <span>View Rooms</span>
                     </button>

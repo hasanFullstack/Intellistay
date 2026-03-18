@@ -44,7 +44,6 @@ const AddRoom = ({ hostelId, onSuccess }) => {
       if (onSuccess) onSuccess();
     } catch (err) {
       setError("Failed to add room. Please try again.");
-      console.error(err);
     } finally {
       setLoading(false);
     }

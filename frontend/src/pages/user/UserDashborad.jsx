@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { getUserBookings, cancelBooking } from "../../api/booking.api";
 import { useAuth } from "../../auth/AuthContext";
 import "./UserDashboard.css";
+import { toast } from "react-toastify";
+import RecommendedHostels from "./RecommendedHostels";
+import SimilarStudents from "./SimilarStudents";
 
 const UserDashboard = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("bookings");
 
   const loadBookings = async () => {
     try {
@@ -14,7 +18,7 @@ const UserDashboard = () => {
       const res = await getUserBookings(user._id);
       setBookings(res.data || []);
     } catch (err) {
-      console.error("Error loading bookings:", err);
+      toast.error("Failed to load bookings");
     } finally {
       setLoading(false);
     }
@@ -24,11 +28,10 @@ const UserDashboard = () => {
     if (window.confirm("Are you sure you want to cancel this booking?")) {
       try {
         await cancelBooking(bookingId);
-        alert("Booking cancelled successfully!");
+        toast.success("Booking cancelled successfully!");
         await loadBookings();
       } catch (err) {
-        alert("Failed to cancel booking");
-        console.error(err);
+        toast.error("Failed to cancel booking");
       }
     }
   };
@@ -117,7 +120,53 @@ const UserDashboard = () => {
           </div>
         </div>
 
+        {/* Tab Navigation */}
+        <div style={{
+          display: "flex",
+          gap: "8px",
+          marginBottom: "24px",
+          background: "#f8fafc",
+          padding: "6px",
+          borderRadius: "14px",
+          border: "1px solid #e2e8f0"
+        }}>
+          {[
+            { key: "bookings", label: "📚 My Bookings", icon: "bi-calendar-check" },
+            { key: "recommendations", label: "🏠 Recommended", icon: "bi-stars" },
+            { key: "similar", label: "👥 Similar Students", icon: "bi-people" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                border: "none",
+                borderRadius: "10px",
+                fontWeight: 700,
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                background: activeTab === tab.key
+                  ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
+                  : "transparent",
+                color: activeTab === tab.key ? "white" : "#64748b",
+                boxShadow: activeTab === tab.key
+                  ? "0 4px 12px rgba(99, 102, 241, 0.3)"
+                  : "none",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === "recommendations" && <RecommendedHostels />}
+        {activeTab === "similar" && <SimilarStudents />}
+
         {/* Bookings Section */}
+        {activeTab === "bookings" && (
         <div className="bookings-section">
           <div className="section-header">
             <h2>📚 Your Bookings</h2>
@@ -250,6 +299,7 @@ const UserDashboard = () => {
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   );

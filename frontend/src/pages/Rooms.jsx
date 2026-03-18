@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllHostels } from "../api/hostel.api";
 import { getRoomsByHostel } from "../api/room.api";
 import "./Rooms.css";
+import { toast } from "react-toastify";
 
 const Rooms = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [hostels, setHostels] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,12 +24,16 @@ const Rooms = () => {
       setLoading(true);
       const res = await getAllHostels();
       setHostels(res.data || []);
-      if (res.data && res.data.length > 0) {
-        await loadRoomsForHostel(res.data[0]._id);
-        setSelectedHostel(res.data[0]._id);
+      const preselected = searchParams.get("hostel");
+      const firstHostel = preselected && res.data?.find(h => h._id === preselected)
+        ? preselected
+        : res.data?.[0]?._id;
+      if (firstHostel) {
+        await loadRoomsForHostel(firstHostel);
+        setSelectedHostel(firstHostel);
       }
     } catch (err) {
-      console.error("Error loading hostels:", err);
+      toast.error("Failed to load hostels");
     } finally {
       setLoading(false);
     }
@@ -38,7 +44,7 @@ const Rooms = () => {
       const res = await getRoomsByHostel(hostelId);
       setRooms(res.data || []);
     } catch (err) {
-      console.error("Error loading rooms:", err);
+      toast.error("Failed to load rooms");
       setRooms([]);
     }
   };

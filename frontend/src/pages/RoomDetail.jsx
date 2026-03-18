@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRoomById, getRoomsByHostel } from "../api/room.api";
 import { getHostelById } from "../api/hostel.api";
+import { toast } from "react-toastify";
 
 const RoomDetail = () => {
   const { roomId, hostelId } = useParams();
@@ -32,7 +33,7 @@ const RoomDetail = () => {
         );
         setRelatedRooms(filtered.slice(0, 3));
       } catch (err) {
-        console.error("Error fetching room details:", err);
+        toast.error("Failed to load room details");
       } finally {
         setLoading(false);
       }
@@ -59,7 +60,7 @@ const RoomDetail = () => {
 
   const handleBooking = () => {
     // TODO: Implement booking functionality
-    alert("Booking feature coming soon!");
+    toast.info("Booking feature coming soon!");
   };
 
   if (loading) {
