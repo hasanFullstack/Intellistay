@@ -2,6 +2,7 @@ import express from "express";
 import {
   addRoom,
   getRoomsByHostel,
+  getAllRooms,
   getRoomById,
   updateRoom,
   deleteRoom,
@@ -12,6 +13,7 @@ import { protect, allowRoles } from "../middleware/role.middleware.js";
 const router = express.Router();
 
 // Public routes
+router.get("/", getAllRooms);
 router.get("/hostel/:hostelId", getRoomsByHostel);
 router.get("/:roomId", getRoomById);
 

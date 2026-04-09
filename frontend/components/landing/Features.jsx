@@ -63,7 +63,7 @@ const FeaturesSection = () => {
             {/* Right Image/Video Side */}
             <div className="w-full lg:w-1/2 relative min-h-[400px]">
                 <img
-                    src="https://html.merku.love/hosteller/img/index/about.webp"
+                    src="https://picsum.photos/id/1015/800/600"
                     alt="People laughing and reading in hostel"
                     className="w-full h-full object-cover"
                 />

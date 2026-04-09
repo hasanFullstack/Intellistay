@@ -6,6 +6,8 @@ export const addRoom = (hostelId, data) =>
 export const getRoomsByHostel = (hostelId) =>
   api.get(`/rooms/hostel/${hostelId}`);
 
+export const getAllRooms = (config) => api.get(`/rooms`, config);
+
 export const getRoomById = (roomId) => api.get(`/rooms/${roomId}`);
 
 export const updateRoom = (roomId, data) => api.put(`/rooms/${roomId}`, data);

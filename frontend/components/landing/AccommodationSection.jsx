@@ -55,7 +55,7 @@ const AccommodationSection = () => {
           {/* Main Background Image */}
           <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
             <img
-              src="https://html.merku.love/hosteller/img/index/promo.webp"
+              src="https://picsum.photos/id/1020/800/600"
               alt="Luxury living room"
               className="w-full h-full object-cover"
             />

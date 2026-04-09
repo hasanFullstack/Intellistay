@@ -6,6 +6,9 @@ import {
 } from "react-icons/fa";
 
 export default function ContactSection() {
+  const contactIconBoxClass =
+    "w-[50px] h-[50px] rounded-[10px] bg-gradient-to-br from-[#235784] to-[#1a3f57] text-white flex items-center justify-center shrink-0";
+
   return (
     <section className="bg-gray-100 py-20">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -20,7 +23,7 @@ export default function ContactSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {/* Phone */}
             <div className="flex gap-4">
-              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+              <div className={contactIconBoxClass}>
                 <FaPhoneAlt size={20} />
               </div>
               <div>
@@ -31,7 +34,7 @@ export default function ContactSection() {
 
             {/* Email */}
             <div className="flex gap-4">
-              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+              <div className={contactIconBoxClass}>
                 <FaEnvelope size={20} />
               </div>
               <div>
@@ -42,7 +45,7 @@ export default function ContactSection() {
 
             {/* Location */}
             <div className="flex gap-4">
-              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+              <div className={contactIconBoxClass}>
                 <FaMapMarkerAlt size={20} />
               </div>
               <div>
@@ -56,7 +59,7 @@ export default function ContactSection() {
 
             {/* Working Time */}
             <div className="flex gap-4">
-              <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+              <div className={contactIconBoxClass}>
                 <FaClock size={20} />
               </div>
               <div>

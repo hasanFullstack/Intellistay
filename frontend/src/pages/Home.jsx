@@ -6,7 +6,8 @@ import HostelHero from "../../components/landing/HostelHero";
 import RoomSection from "../../components/landing/RoomSection";
 import FeaturesSection from "../../components/landing/Features";
 import AccommodationSection from "../../components/landing/AccommodationSection";
-import ContactsSection from "../../components/landing/Contact";
+import FeaturedHostels from "../../components/landing/FeaturedHostels";
+import ContactsSection from "../../components/ContactSection";
 import { toast } from "react-toastify";
 
 const Home = () => {
@@ -56,6 +57,7 @@ const Home = () => {
     <div>
       {/* HERO SECTION */}
       <HostelHero />
+      <FeaturedHostels />
       <RoomSection />
       <FeaturesSection />
       <AccommodationSection />

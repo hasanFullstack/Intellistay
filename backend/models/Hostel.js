@@ -31,4 +31,8 @@ const hostelSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+hostelSchema.index({ ownerId: 1 });
+hostelSchema.index({ viewCount: -1 });
+hostelSchema.index({ createdAt: -1 });
+
 export default mongoose.model("Hostel", hostelSchema);
