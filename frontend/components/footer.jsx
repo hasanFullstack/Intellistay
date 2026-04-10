@@ -1,88 +1,96 @@
-import { Link } from "react-router-dom";
 import {
-  FaFacebookF,
-  FaInstagram,
-  FaTwitter,
-  FaWhatsapp,
+    FaFacebookF,
+    FaInstagram,
+    FaTwitter,
+    FaGoogle,
 } from "react-icons/fa";
-import { FiMapPin, FiPhone } from "react-icons/fi";
 
 const Footer = () => {
-  return (
-    <footer className="bg-[#245680] text-white">
-      <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-        {/* Brand */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <img
-              src="/logo.png"
-              alt="INTELLISTAY Logo"
-              className="navbar__logo-img"
-            />
-          </div>
-          <p className="text-sm text-gray-200 leading-relaxed">
-            Your trusted platform for finding the perfect hostel accommodation.
-            Connecting students and travelers with comfortable, affordable homes
-            away from home.
-          </p>
-        </div>
+    return (
+        <footer className="relative text-white h-[700px]">
+            {/* Background */}
+            <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{
+                    backgroundImage:
+                        "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c')",
+                }}
+            ></div>
 
-        {/* Quick Links */}
-        <div>
-          <h4 className="text-lg font-semibold mb-4 ml-7">Quick links</h4>
-          <ul className="space-y-2 text-sm text-gray-200">
-            <li><Link to="/" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Home</Link></li>
-            <li><Link to="/hostels" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Hostels</Link></li>
-            <li><Link to="/rooms" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Rooms</Link></li>
-            <li><Link to="/contact" className="hover:text-white" style={{ color: "inherit", textDecoration: "none" }}>Contact</Link></li>
-          </ul>
-        </div>
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/85"></div>
 
-        {/* Contact */}
-        <div>
-          <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
-          <div className="flex items-start gap-3 mb-4 text-sm text-gray-200">
-            <FiMapPin className="text-xl mt-1" />
-            <span>
-              Bahria University <br />
-              Islamabad Campus
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-gray-200">
-            <FiPhone className="text-xl" />
-            <span>(329) 580-7077</span>
-          </div>
-        </div>
+            {/* Content */}
+            <div className="relative max-w-7xl mx-auto px-6 py-20">
+                
+                {/* TOP ROW (Newsletter LEFT + Links RIGHT) */}
+                <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
+                    
+                    {/* LEFT → Newsletter */}
+                    <div className="max-w-lg w-full">
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                            Stay Updated! Subscribe To <br /> Our Newsletter
+                        </h2>
 
-        {/* Social */}
-        <div>
-          <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
-          <p className="text-sm text-gray-200 mb-4">
-            Follow us on social media.
-          </p>
-          <div className="flex gap-4">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="Facebook">
-              <FaFacebookF />
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="Instagram">
-              <FaInstagram />
-            </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="Twitter">
-              <FaTwitter />
-            </a>
-            <a href="https://wa.me/923295807077" target="_blank" rel="noopener noreferrer" className="footer-icon" aria-label="WhatsApp">
-              <FaWhatsapp />
-            </a>
-          </div>
-        </div>
-      </div>
+                        <div className="flex items-center bg-white rounded-full p-2">
+                            <input
+                                type="email"
+                                placeholder="Your email"
+                                className="flex-1 px-4 py-3 text-black outline-none bg-transparent"
+                            />
 
-      {/* Bottom Bar */}
-      <div className="bg-gray-100 text-gray-600 text-sm py-4 text-center">
-        © 2026 Intellistay. All rights reserved.
-      </div>
-    </footer>
-  );
+                            {/* PERFECT CIRCLE BUTTON */}
+                            <button className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-500 text-white text-xl shrink-0">
+                                →
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* RIGHT → Pages + Resources */}
+                    <div className="flex gap-16">
+                        <div>
+                            <h4 className="font-semibold mb-4">Pages</h4>
+                            <ul className="space-y-2 text-gray-1000">
+                                <li className="hover:text-white cursor-pointer">Home</li>
+                                <li className="hover:text-white cursor-pointer">About-Us</li>
+                                <li className="hover:text-white cursor-pointer">Contact-Us</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="font-semibold mb-4">Resources</h4>
+                            <ul className="space-y-2 text-gray-300">
+                                <li className="hover:text-white cursor-pointer">FAQS</li>
+                                <li className="hover:text-white cursor-pointer">Privacy Policy</li>
+                                <li className="hover:text-white cursor-pointer">Terms & Conditions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {/* BOTTOM ROW */}
+                <div className="mt-20 flex items-center justify-between">
+                    <div className="text-sm text-white font-semibold">
+                        © 2025 FindByFeature. All Rights Reserved.
+                    </div>
+
+                    <div className="flex items-center gap-6 text-2xl">
+                        <FaGoogle className="cursor-pointer hover:text-gray-300" />
+                        <FaFacebookF className="cursor-pointer hover:text-gray-300" />
+                        <FaTwitter className="cursor-pointer hover:text-gray-300" />
+                        <FaInstagram className="cursor-pointer hover:text-gray-300" />
+                    </div>
+                </div>
+            </div>
+
+            {/* BIG TEXT */}
+            <div className="absolute bottom-0 left-0 w-full text-center pointer-events-none">
+                <h1 className="text-[80px] md:text-[140px] font-bold text-white/10 tracking-widest">
+                    FINDBYFEATURE
+                </h1>
+            </div>
+        </footer>
+    );
 };
 
 export default Footer;

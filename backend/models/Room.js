@@ -35,4 +35,8 @@ const roomSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+roomSchema.index({ hostelId: 1 });
+roomSchema.index({ availableBeds: 1 });
+roomSchema.index({ hostelId: 1, pricePerBed: 1 });
+
 export default mongoose.model("Room", roomSchema);

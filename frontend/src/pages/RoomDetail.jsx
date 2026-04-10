@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 const RoomDetail = () => {
   const { roomId, hostelId } = useParams();
   const navigate = useNavigate();
+  const backToRoomsPath = hostelId ? `/hostels/${hostelId}/rooms` : "/rooms";
   const [room, setRoom] = useState(null);
   const [hostel, setHostel] = useState(null);
   const [relatedRooms, setRelatedRooms] = useState([]);
@@ -80,10 +81,10 @@ const RoomDetail = () => {
         <div className="text-center">
           <p className="text-gray-600 mb-4">Room not found</p>
           <button
-            onClick={() => navigate("/rooms")}
+            onClick={() => navigate(backToRoomsPath)}
             className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
-            Back to Rooms
+            Back to Hostel Rooms
           </button>
         </div>
       </div>
@@ -96,7 +97,7 @@ const RoomDetail = () => {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <button
-            onClick={() => navigate("/rooms")}
+            onClick={() => navigate(backToRoomsPath)}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition font-medium"
           >
             <svg
@@ -112,7 +113,7 @@ const RoomDetail = () => {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Rooms
+            Back to Hostel Rooms
           </button>
         </div>
       </div>

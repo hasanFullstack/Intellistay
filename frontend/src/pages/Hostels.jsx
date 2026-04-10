@@ -8,6 +8,28 @@ import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
 import { toast } from "react-toastify";
 
+const HOSTELS_CACHE_KEY = "intellistay.hostels.all.v1";
+
+const readCachedHostels = () => {
+  try {
+    const rawData = sessionStorage.getItem(HOSTELS_CACHE_KEY);
+    if (!rawData) return null;
+
+    const parsed = JSON.parse(rawData);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedHostels = (data) => {
+  try {
+    sessionStorage.setItem(HOSTELS_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // Ignore cache write issues quietly.
+  }
+};
+
 const Hostels = () => {
   const navigate = useNavigate();
   const [hostels, setHostels] = useState([]);
@@ -23,13 +45,38 @@ const Hostels = () => {
   }, []);
 
   const loadHostels = async () => {
-    try {
+    const cachedHostels = readCachedHostels();
+
+    if (cachedHostels?.length) {
+      setHostels(cachedHostels);
+      setFilteredHostels(cachedHostels);
+      setLoading(false);
+    } else {
       setLoading(true);
+    }
+
+    try {
       const res = await getAllHostels();
-      setHostels(res.data || []);
-      setFilteredHostels(res.data || []);
+      const freshHostels = res.data || [];
+      setHostels(freshHostels);
+      setFilteredHostels((prev) => {
+        if (!searchTerm) return freshHostels;
+
+        return freshHostels.filter(
+          (hostel) =>
+            (hostel.name || "")
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            (hostel.location || "")
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()),
+        );
+      });
+      writeCachedHostels(freshHostels);
     } catch (err) {
-      toast.error("Failed to load hostels");
+      if (!cachedHostels?.length) {
+        toast.error("Failed to load hostels");
+      }
     } finally {
       setLoading(false);
     }
@@ -270,9 +317,12 @@ const Hostels = () => {
 
                   {/* Card Footer */}
                   <div className="card-footer-section">
-                    <button className="btn-view-rooms" onClick={() => navigate(`/rooms?hostel=${hostel._id}`)}>
+                    <button
+                      className="btn-view-rooms"
+                      onClick={() => navigate(`/hostels/${hostel._id}/rooms`)}
+                    >
                       <i className="bi bi-door-open"></i>
-                      <span>View Rooms</span>
+                      <span>Available Rooms</span>
                     </button>
                   </div>
                 </div>

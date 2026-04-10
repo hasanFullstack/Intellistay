@@ -19,6 +19,7 @@ const AuthModal = ({ isOpen, onClose }) => {
       if (isLogin) {
         const res = await loginApi(form);
         login(res.data);
+        onClose?.();
         
         // Smart redirect based on role and quiz completion
         const user = res.data.user;

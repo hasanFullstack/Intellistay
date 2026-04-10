@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../src/auth/AuthContext";
 import { toast } from "react-toastify";
 import { useState } from "react";
+import Banner from "./Banner";
 
 const Navbar = ({ openAuth }) => {
   const { user, logout } = useAuth();
@@ -17,6 +18,7 @@ const Navbar = ({ openAuth }) => {
 
   return (
     <header className="navbar">
+      <Banner/>
       <div className="navbar__inner container mx-auto">
         <div className="navbar__brand">
           <Link to="/" className="navbar__logo">

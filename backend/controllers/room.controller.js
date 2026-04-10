@@ -44,6 +44,24 @@ export const getRoomsByHostel = async (req, res) => {
   }
 };
 
+export const getAllRooms = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 0;
+    // Use $slice to return only first image per room — keeps payload small but allows thumbnails
+    let query = Room.find(
+      {},
+      { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, gender: 1, description: 1, hostelId: 1, createdAt: 1 }
+    )
+      .sort({ createdAt: -1 })
+      .populate('hostelId', 'name city');
+    if (limit > 0) query = query.limit(limit);
+    const rooms = await query.lean();
+    res.json(rooms);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
 export const getRoomById = async (req, res) => {
   try {
     const { roomId } = req.params;

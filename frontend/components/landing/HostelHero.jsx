@@ -1,79 +1,131 @@
-import React from 'react';
-// import { Calendar, User, ChevronDown } from 'lucide-react';
+import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import { Autoplay } from "swiper/modules";
+import { Typewriter } from "react-simple-typewriter";
 
-const HostelHero = () => {
+const baseImages = [
+  "https://picsum.photos/id/1015/800/600",
+  "https://picsum.photos/id/1016/800/600",
+  "https://picsum.photos/id/1027/800/600",
+  "https://picsum.photos/id/1040/800/600",
+  "https://picsum.photos/id/1018/800/600",
+  "https://picsum.photos/id/1035/800/600",
+  "https://picsum.photos/id/1020/800/600",
+  "https://picsum.photos/id/1024/800/600",
+  "https://picsum.photos/id/1033/800/600",
+];
+
+// Duplicate enough times so Swiper always has slides to loop over
+const images = [...baseImages, ...baseImages, ...baseImages, ...baseImages];
+
+const HeroSlider = () => {
+  const curveOverlayBase = {
+    position: "absolute",
+    left: "50%",
+    transform: "translateX(-50%)",
+    width: "68%",
+    height: "170px",
+    background: "#fff",
+    borderRadius: "30%",
+    zIndex: 3,
+    pointerEvents: "none",
+  };
+
   return (
-    <section className="ml-[10%]">
-      <div className="relative w-full min-h-[600px] flex justify-center flex-col md:flex-row">
-        {/* Left Content Side */}
-        <div className='flex-1 flex items-center'>
-          <div className=' bg-slate-50'>
-            <div className="flex flex-col h-fit justify-center px-8 md:px-10 py-16">
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mb-6">
-                Hosteller — amazing hostel for the free spirited traveler
-              </h1>
-
-              <div className="border-l-2 border-slate-900 pl-6 py-1">
-                <p className="text-slate-600 text-sm md:text-base leading-relaxed max-w-md">
-                  Egestas pretium aenean pharetra magna ac. Et tortor
-                  consequat id porta nibh venenatis cras sed. Vel turpis
-                  nunc eget lorem dolor sed.
-                </p>
-              </div>
-            </div>
-            <div className="ml-8 md:ml-10 w-full bg-white rounded-lg shadow-xl flex flex-col md:flex-row items-stretch overflow-hidden z-10">
-
-              {/* Check-in */}
-              <div className="flex-1 px-6 py-4 border-r border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors">
-                <span className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">Check-in</span>
-                <div className="flex items-center justify-between text-slate-400">
-                  <div className="flex items-center gap-2">
-                    {/* <Calendar size={18} /> */}
-                    <span className="text-sm">Add date</span>
-                  </div>
-                  {/* <ChevronDown size={16} /> */}
-                </div>
-              </div>
-
-              {/* Check-out */}
-              <div className="flex-1 px-6 py-4 border-r border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors">
-                <span className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">Check-out</span>
-                <div className="flex items-center justify-between text-slate-400">
-                  <div className="flex items-center gap-2">
-                    {/* <Calendar size={18} /> */}
-                    <span className="text-sm">Add date</span>
-                  </div>
-                  {/* <ChevronDown size={16} /> */}
-                </div>
-              </div>
-
-              {/* Guests */}
-              <div className="flex-1 px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors">
-                <span className="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-2">Guests</span>
-                <div className="flex items-center gap-2 text-slate-400">
-                  {/* <User size={18} /> */}
-                  <span className="text-sm text-slate-600">1 adult</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right Image Side */}
-        <div className="relative flex-1 min-h-[400px]">
-          <img
-            src="https://html.merku.love/hosteller/img/index/hero.webp"
-            alt="Cozy attic room with skylights"
-            className="w-full h-full object-cover"
-          />
-          <button className="absolute flex items-center justify-center !rounded-r-xl bottom-21.5 left-0 bg-[#235784] hover:!bg-white hover:!text-[#2b5a84] text-white px-12 py-11 h-23 font-semibold transition-all ">
-            Search
-          </button>
-        </div>
+    <div className="pt-20">
+      <div className="flex flex-col items-center text-center gap-4 mb-8 px-4">
+        <h1 className="!text-3xl md:!text-6xl font-bold">
+          Find hostels by{" "}
+          <span className="text-[#235784]">
+            <Typewriter
+              words={[
+                "Location you prefer.",
+                "Amenities you want.",
+                "Features you love.",
+              ]}
+              loop={true}
+              cursor
+              cursorStyle="|"
+              typeSpeed={70}
+              deleteSpeed={40}
+              delaySpeed={1500}
+            />
+          </span>
+        </h1>
+        <h6 className="!text-2`xl text-black leading-[100%] max-sm:text-center">
+          Your AI-powered way to find hostels with the features that matter.
+        </h6>
       </div>
-    </section>
+      <div className="w-full overflow-hidden bg-white relative">
+        {/* Curve mask (center trimmed, sides taller) */}
+        <div style={{ ...curveOverlayBase, top: -105, width: "120%" }} />
+        <div style={{ ...curveOverlayBase, bottom: -105, width: "120%" }} />
+
+        <Swiper
+          modules={[Autoplay]}
+          slidesPerView={6}
+          breakpoints={{
+            0: {
+              slidesPerView: 1,
+            },
+            576: {
+              slidesPerView: 2,
+            },
+            768: {
+              slidesPerView: 3,
+            },
+            992: {
+              slidesPerView: 4,
+            },
+            1200: {
+              slidesPerView: 6,
+            },
+          }}
+          spaceBetween={20}
+          loop={true}
+          loopFillGroupWithBlank={false}
+          // autoplay is fully continuous below
+          style={{
+            width: "100%",
+            padding: "0",
+            height: "440px",
+          }}
+          speed={1500}
+          loopAdditionalSlides={baseImages.length}
+          autoplay={{
+            delay: 400,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: false,
+            waitForTransition: true,
+          }}
+          allowTouchMove={true}
+        >
+          {images.map((img, index) => (
+            <SwiperSlide key={index}>
+              <div
+                style={{
+                  height: "440px",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src={img}
+                  alt={`slide-${index}`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </div>
   );
 };
 
-export default HostelHero;
+export default HeroSlider;
