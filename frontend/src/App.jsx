@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import "./App.css";
@@ -16,19 +16,42 @@ import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import PersonalityQuizPage from "./pages/PersonalityQuizPage";
 import AuthModal from "./pages/AuthModal";
 import NotFound from "./pages/NotFound";
+import BookingSuccess from "./pages/BookingSuccess";
 
 import { useState } from "react";
 
-const AppContent = ({ authOpen, setAuthOpen }) => {
-  const { user } = useAuth();
-
+// Layout wrapper that conditionally shows Navbar/Footer
+const MainLayout = ({ children, authOpen, setAuthOpen }) => {
   return (
     <>
       <Navbar openAuth={() => setAuthOpen(true)} />
       {authOpen && (
         <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
       )}
+      {children}
+      <Footer />
+    </>
+  );
+};
 
+const AppContent = ({ authOpen, setAuthOpen }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  // Standalone pages (no Navbar/Footer)
+  const standaloneRoutes = ["/booking-success"];
+  const isStandalone = standaloneRoutes.includes(location.pathname);
+
+  if (isStandalone) {
+    return (
+      <Routes>
+        <Route path="/booking-success" element={<BookingSuccess />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <MainLayout authOpen={authOpen} setAuthOpen={setAuthOpen}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<AuthModal isOpen={true} onClose={() => {}} />} />
@@ -73,8 +96,7 @@ const AppContent = ({ authOpen, setAuthOpen }) => {
         {/* 404 Catch-all */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Footer />
-    </>
+    </MainLayout>
   );
 };
 

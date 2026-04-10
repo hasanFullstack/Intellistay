@@ -37,7 +37,7 @@ export const addRoom = async (req, res) => {
 export const getRoomsByHostel = async (req, res) => {
   try {
     const { hostelId } = req.params;
-    const rooms = await Room.find({ hostelId });
+    const rooms = await Room.find({ hostelId }).select({ images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, gender: 1, description: 1 });
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ msg: error.message });
@@ -50,7 +50,7 @@ export const getAllRooms = async (req, res) => {
     // Use $slice to return only first image per room — keeps payload small but allows thumbnails
     let query = Room.find(
       {},
-      { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, gender: 1, description: 1, hostelId: 1, createdAt: 1 }
+      { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, gender: 1, description: 1, hostelId: 1 }
     )
       .sort({ createdAt: -1 })
       .populate('hostelId', 'name city');
@@ -65,7 +65,7 @@ export const getAllRooms = async (req, res) => {
 export const getRoomById = async (req, res) => {
   try {
     const { roomId } = req.params;
-    const room = await Room.findById(roomId).populate("hostelId");
+    const room = await Room.findById(roomId).populate("hostelId").lean();
     if (!room) {
       return res.status(404).json({ msg: "Room not found" });
     }

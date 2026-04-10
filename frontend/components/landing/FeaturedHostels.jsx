@@ -350,7 +350,7 @@ const FeaturedHostels = () => {
                   {/* Image Container */}
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={hostel?.images?.[0] || fallbackImage}
+                      src={(hostel?.images && hostel.images.length > 0) ? hostel.images[0] : "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=800"}
                       alt={hostel?.name || "Hostel"}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

@@ -105,6 +105,11 @@ const Rooms = () => {
                       }`}
                       onClick={() => handleHostelChange(hostel._id)}
                     >
+                      <img
+                        src={(hostel?.images && hostel.images.length > 0) ? hostel.images[0] : "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=800"}
+                        alt={hostel?.name || "Hostel"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                       <div className="hostel-name">{hostel.name}</div>
                       <div className="hostel-location">
                         <i className="bi bi-geo-alt"></i> {hostel.location}
@@ -184,15 +189,15 @@ const Rooms = () => {
                   {filteredRooms.map((room) => (
                     <div key={room._id} className="room-card">
                       {/* Room Featured Image */}
-                      {room.images && room.images.length > 0 && (
-                        <div className="room-image-section">
-                          <img
-                            src={room.images[0]}
-                            alt={room.roomType}
-                            className="room-featured-image"
-                          />
-                        </div>
-                      )}
+                      <div className="room-image-section">
+                        <img
+                          src={(room.images && room.images.length > 0) 
+                            ? room.images[0] 
+                            : "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800"}
+                          alt={room.roomType}
+                          className="room-featured-image"
+                        />
+                      </div>
 
                       <div className="room-header">
                         <h5 className="room-type">{room.roomType}</h5>

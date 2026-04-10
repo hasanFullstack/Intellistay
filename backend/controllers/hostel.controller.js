@@ -7,9 +7,9 @@ import { calculateCompatibilityScore } from "../utils/matchingEngine.js";
 import { cosineSimilarity } from "../utils/cosineSimilarity.js";
 
 const HOSTEL_LIST_FIELDS =
-  "name location description amenities images rules environmentScore viewCount createdAt";
+  "name location description images amenities rules environmentScore viewCount createdAt";
 const HOSTEL_DETAIL_FIELDS =
-  "ownerId name location description amenities images rules environmentScore viewCount createdAt updatedAt";
+  "ownerId name location description images amenities rules environmentScore viewCount createdAt updatedAt";
 const HOSTEL_CACHE_TTL_MS = 60 * 1000;
 const hostelCache = new Map();
 
@@ -61,8 +61,9 @@ export const getAllHostels = async (req, res) => {
         return res.json(cachedHostels);
       }
 
+      hostelCache.clear(); // BUST CACHE ONCE
       const hostels = await Hostel.find()
-        .select(HOSTEL_LIST_FIELDS)
+        .select({ images: { $slice: 1 }, name: 1, location: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, viewCount: 1, createdAt: 1 })
         .sort({ createdAt: -1 })
         .lean();
       setCachedHostelData("hostels:all", hostels);
@@ -92,7 +93,7 @@ export const getAllHostels = async (req, res) => {
         availableBeds: { $gt: 0 },
       });
       const hostels = await Hostel.find({ _id: { $in: hostelIds } })
-        .select(HOSTEL_LIST_FIELDS)
+        .select({ images: { $slice: 1 }, name: 1, location: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, viewCount: 1, createdAt: 1 })
         .lean();
       setCachedHostelData("hostels:available", hostels);
       return res.json(hostels);
@@ -115,7 +116,7 @@ export const getAllHostels = async (req, res) => {
       const orderedHostels = await Hostel.find({
         _id: { $in: orderedIds },
       })
-        .select(HOSTEL_LIST_FIELDS)
+        .select({ images: { $slice: 1 }, name: 1, location: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, viewCount: 1, createdAt: 1 })
         .lean();
       const map = new Map(orderedHostels.map((h) => [String(h._id), h]));
 
@@ -130,7 +131,7 @@ export const getAllHostels = async (req, res) => {
 
       // Remaining hostels: return with popularityScore = 0, sorted by viewCount
       const remaining = await Hostel.find({ _id: { $nin: orderedIds } })
-        .select(HOSTEL_LIST_FIELDS)
+        .select({ images: { $slice: 1 }, name: 1, location: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, viewCount: 1, createdAt: 1 })
         .sort({ viewCount: -1 })
         .lean();
       const remainingWithScore = remaining.map((h) => ({
@@ -155,7 +156,10 @@ export const getAllHostels = async (req, res) => {
 
       const envs = await HostelEnvironment.find({
         profileCompleted: true,
-      }).populate("hostelId", HOSTEL_LIST_FIELDS);
+      }).populate({
+        path: "hostelId",
+        select: { images: { $slice: 1 }, name: 1, location: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, viewCount: 1, createdAt: 1 }
+      });
 
       const results = envs
         .filter((env) => env.hostelId)
@@ -180,7 +184,10 @@ export const getAllHostels = async (req, res) => {
 
       const envs = await HostelEnvironment.find({
         profileCompleted: true,
-      }).populate("hostelId", HOSTEL_LIST_FIELDS);
+      }).populate({
+        path: "hostelId",
+        select: { images: { $slice: 1 }, name: 1, location: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, viewCount: 1, createdAt: 1 }
+      });
 
       const hostelIds = envs
         .map((env) => env.hostelId?._id)
@@ -249,7 +256,7 @@ export const getHostelById = async (req, res) => {
     const hostel = await Hostel.findById(req.params.id).populate(
       "ownerId",
       "name email",
-    ).select(HOSTEL_DETAIL_FIELDS).lean();
+    ).lean();
     if (!hostel) {
       return res.status(404).json({ msg: "Hostel not found" });
     }

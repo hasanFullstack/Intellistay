@@ -1,5 +1,10 @@
-/* Tailwind removed — global CSS below */
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-headline: "Manrope", sans-serif;
+}
+
 /* Add project global styles here */
 
 :root {
