@@ -1,13 +1,14 @@
 import {
     FaFacebookF,
     FaInstagram,
-    FaTwitter,
-    FaGoogle,
+    FaYoutube,
 } from "react-icons/fa";
+import { BsTwitterX } from "react-icons/bs";
+
 
 const Footer = () => {
     return (
-        <footer className="relative text-white h-[700px]">
+        <footer className="relative text-white min-h-[750px] overflow-hidden">
             {/* Background */}
             <div
                 className="absolute inset-0 bg-cover bg-center"
@@ -18,76 +19,88 @@ const Footer = () => {
             ></div>
 
             {/* Overlay */}
-            <div className="absolute inset-0 bg-black/85"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/100 via-black/90 to-transparent"></div>
 
-            {/* Content */}
-            <div className="relative max-w-7xl mx-auto px-6 py-20">
-                
+            {/* Content flex container for min height */}
+            <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-40 md:py-20 md:pb-48 flex flex-col justify-between h-full">
+
                 {/* TOP ROW (Newsletter LEFT + Links RIGHT) */}
                 <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
-                    
+
                     {/* LEFT → Newsletter */}
-                    <div className="max-w-lg w-full">
-                        <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                            Stay Updated! Subscribe To <br /> Our Newsletter
+                    <div className="max-w-xl w-full">
+                        <h2 className="!text-4xl md:!text-5xl font-bold mb-6 leading-tight">
+                            Stay Updated! Subscribe To Our Newsletter
                         </h2>
 
                         <div className="flex items-center bg-white rounded-full p-2">
                             <input
                                 type="email"
                                 placeholder="Your email"
-                                className="flex-1 px-4 py-3 text-black outline-none bg-transparent"
+                                className="flex-1 px-3 py-1 text-black outline-none bg-transparent"
                             />
 
                             {/* PERFECT CIRCLE BUTTON */}
-                            <button className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-500 text-white text-xl shrink-0">
+                            <button className="bg-[var(--primary-color)] w-12 h-12 flex items-center justify-center !rounded-full bg-blue-500 text-white !text-2xl !font-bold shrink-0" style={{ borderRadius: '50%' }}>
                                 →
                             </button>
                         </div>
                     </div>
 
                     {/* RIGHT → Pages + Resources */}
-                    <div className="flex gap-16">
+                    <div className="flex flex-col sm:flex-row gap-10 sm:gap-16">
                         <div>
                             <h4 className="font-semibold mb-4">Pages</h4>
-                            <ul className="space-y-2 text-gray-1000">
-                                <li className="hover:text-white cursor-pointer">Home</li>
-                                <li className="hover:text-white cursor-pointer">About-Us</li>
-                                <li className="hover:text-white cursor-pointer">Contact-Us</li>
+                            <ul className="space-y-2 text-gray-1000 p-0 m-0 list-none">
+                                <li className="hover:text-white cursor-pointer mb-4">Home</li>
+                                <li className="hover:text-white cursor-pointer mb-4">About-Us</li>
+                                <li className="hover:text-white cursor-pointer mb-4">Contact-Us</li>
                             </ul>
                         </div>
 
                         <div>
                             <h4 className="font-semibold mb-4">Resources</h4>
-                            <ul className="space-y-2 text-gray-300">
-                                <li className="hover:text-white cursor-pointer">FAQS</li>
-                                <li className="hover:text-white cursor-pointer">Privacy Policy</li>
-                                <li className="hover:text-white cursor-pointer">Terms & Conditions</li>
+                            <ul className="space-y-2 text-gray-300 p-0 m-0 list-none">
+                                <li className="hover:text-white cursor-pointer mb-4">FAQS</li>
+                                <li className="hover:text-white cursor-pointer mb-4">Privacy Policy</li>
+                                <li className="hover:text-white cursor-pointer mb-4">Terms & Conditions</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
                 {/* BOTTOM ROW */}
-                <div className="mt-20 flex items-center justify-between">
-                    <div className="text-sm text-white font-semibold">
-                        © 2025 FindByFeature. All Rights Reserved.
+                <div className="mt-16 md:mt-20 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="text-lg text-white font-semibold">
+                        © 2026 Intellistay. All Rights Reserved.
                     </div>
 
-                    <div className="flex items-center gap-6 text-2xl">
-                        <FaGoogle className="cursor-pointer hover:text-gray-300" />
+                    <div className="flex items-center gap-10 text-4xl">
                         <FaFacebookF className="cursor-pointer hover:text-gray-300" />
-                        <FaTwitter className="cursor-pointer hover:text-gray-300" />
+                        <FaYoutube className="cursor-pointer hover:text-gray-300" />
+                        <BsTwitterX className="cursor-pointer hover:text-gray-300" />
                         <FaInstagram className="cursor-pointer hover:text-gray-300" />
                     </div>
                 </div>
             </div>
 
-            {/* BIG TEXT */}
-            <div className="absolute bottom-0 left-0 w-full text-center pointer-events-none">
-                <h1 className="text-[80px] md:text-[140px] font-bold text-white/10 tracking-widest">
-                    FINDBYFEATURE
-                </h1>
+            {/* BIG TEXT (STRETCHED EDGE-TO-EDGE) */}
+            <div className="absolute bottom-0 left-0 w-full pointer-events-none overflow-hidden h-[80px] md:h-[140px] lg:h-[180px]">
+                <svg width="100%" height="100%" viewBox="0 0 1000 200" preserveAspectRatio="none">
+                    <text
+                        x="50%"
+                        y="80%"
+                        textAnchor="middle"
+                        fill="rgba(176, 176, 176, 0.79)"
+                        fontSize="210"
+                        fontWeight="600"
+                        fontFamily="sans-serif"
+                        textLength="1000"
+                        lengthAdjust="spacingAndGlyphs"
+                    >
+                        INTELLISTAY
+                    </text>
+                </svg>
             </div>
         </footer>
     );

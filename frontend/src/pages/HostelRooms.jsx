@@ -204,15 +204,15 @@ const HostelRooms = () => {
                 onClick={() => openRoomDetail(room._id)}
                 onKeyDown={(event) => handleRoomCardKeyDown(event, room._id)}
               >
-                {room.images && room.images.length > 0 && (
-                  <div className="room-image-section">
-                    <img
-                      src={room.images[0]}
-                      alt={room.roomType}
-                      className="room-featured-image"
-                    />
-                  </div>
-                )}
+                <div className="room-image-section">
+                  <img
+                    src={(room.images && room.images.length > 0) 
+                      ? room.images[0] 
+                      : "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800"}
+                    alt={room.roomType}
+                    className="room-featured-image"
+                  />
+                </div>
 
                 <div className="room-header">
                   <h5 className="room-type">{room.roomType}</h5>

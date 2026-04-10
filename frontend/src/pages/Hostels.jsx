@@ -8,7 +8,7 @@ import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
 import { toast } from "react-toastify";
 
-const HOSTELS_CACHE_KEY = "intellistay.hostels.all.v1";
+const HOSTELS_CACHE_KEY = "intellistay.hostels.all.v2";
 
 const readCachedHostels = () => {
   try {
@@ -234,15 +234,15 @@ const Hostels = () => {
               {filteredHostels.map((hostel) => (
                 <div key={hostel._id} className="hostel-card">
                   {/* Featured Image */}
-                  {hostel.images && hostel.images.length > 0 && (
-                    <div className="card-image-section">
-                      <img
-                        src={hostel.images[0]}
-                        alt={hostel.name}
-                        className="card-featured-image"
-                      />
-                    </div>
-                  )}
+                  <div className="card-image-section">
+                    <img
+                      src={(hostel.images && hostel.images.length > 0) 
+                        ? hostel.images[0] 
+                        : "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=800"}
+                      alt={hostel.name}
+                      className="card-featured-image"
+                    />
+                  </div>
 
                   {/* Card Header */}
                   <div className="card-header-section">

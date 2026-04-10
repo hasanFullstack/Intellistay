@@ -32,6 +32,7 @@ const OwnerDashboard = () => {
   const [selectedHostelId, setSelectedHostelId] = useState(null);
   const [expandedHostelId, setExpandedHostelId] = useState(null);
   const [activeTab, setActiveTab] = useState("hostels");
+  const [bookingFilter, setBookingFilter] = useState("all");
   const [showEnvModal, setShowEnvModal] = useState(false);
   const [envHostelId, setEnvHostelId] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -280,6 +281,27 @@ const OwnerDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Booking Analytics – only visible in bookings tab */}
+        {activeTab === "bookings" && (
+          <div className="row mb-4">
+            {[
+              { label: "Total Bookings", value: bookings.length, color: "#3b82f6", bg: "#eff6ff" },
+              { label: "Confirmed", value: bookings.filter(b => b.status === "confirmed").length, color: "#10b981", bg: "#ecfdf5" },
+              { label: "Pending", value: bookings.filter(b => b.status === "pending").length, color: "#f59e0b", bg: "#fffbeb" },
+              { label: "Total Earnings", value: `Rs ${bookings.filter(b => b.status === "confirmed" || b.status === "completed").reduce((s, b) => s + (b.totalPrice || 0), 0).toLocaleString()}`, color: "#8b5cf6", bg: "#f5f3ff" },
+            ].map((stat) => (
+              <div className="col-md-3" key={stat.label}>
+                <div className="card border-0 shadow-sm mb-3" style={{ borderLeft: `4px solid ${stat.color}` }}>
+                  <div className="card-body py-3">
+                    <p className="text-muted mb-1 small fw-semibold">{stat.label}</p>
+                    <h4 className="fw-bold mb-0" style={{ color: stat.color }}>{stat.value}</h4>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Tabs */}
         <ul className="nav nav-tabs mb-4" role="tablist">
@@ -550,102 +572,130 @@ const OwnerDashboard = () => {
 
         {/* Bookings List */}
         {activeTab === "bookings" && (
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-              <h5 className="card-title mb-0 fw-bold">Booking Requests</h5>
+          <div>
+            {/* Filter Tabs */}
+            <div className="d-flex gap-2 mb-4 flex-wrap">
+              {[
+                { key: "all", label: "All", count: bookings.length },
+                { key: "pending", label: "Pending", count: bookings.filter(b => b.status === "pending").length },
+                { key: "confirmed", label: "Confirmed", count: bookings.filter(b => b.status === "confirmed").length },
+                { key: "cancelled", label: "Cancelled", count: bookings.filter(b => b.status === "cancelled").length },
+              ].map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setBookingFilter(f.key)}
+                  className={`btn btn-sm rounded-pill px-3 py-2 fw-semibold ${
+                    bookingFilter === f.key
+                      ? "btn-primary"
+                      : "btn-outline-secondary"
+                  }`}
+                >
+                  {f.label} <span className="badge bg-light text-dark ms-1">{f.count}</span>
+                </button>
+              ))}
             </div>
-            <div className="card-body">
-              {bookingsLoading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
+
+            {bookingsLoading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border" role="status">
+                  <span className="visually-hidden">Loading...</span>
                 </div>
-              ) : bookings.length === 0 ? (
-                <div className="text-center py-5">
-                  <i
-                    className="bi bi-inbox"
-                    style={{ fontSize: "3rem", color: "#ccc" }}
-                  ></i>
-                  <p className="text-muted mt-3">No bookings yet</p>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Guest Name</th>
-                        <th>Email</th>
-                        <th>Hostel</th>
-                        <th>Room Type</th>
-                        <th>Check-in</th>
-                        <th>Check-out</th>
-                        <th>Beds</th>
-                        <th>Total Price (Rs)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bookings.map((booking) => (
-                        <tr key={booking._id}>
-                          <td>
-                            <strong>{booking.userId?.name || "N/A"}</strong>
-                          </td>
-                          <td>{booking.userId?.email || "N/A"}</td>
-                          <td>{booking.hostelId?.name || "N/A"}</td>
-                          <td>{booking.roomId?.roomType || "N/A"}</td>
-                          <td>
-                            {new Date(booking.startDate).toLocaleDateString()}
-                          </td>
-                          <td>
-                            {new Date(booking.endDate).toLocaleDateString()}
-                          </td>
-                          <td>
-                            <span className="badge bg-info">
-                              {booking.bedsBooked}
-                            </span>
-                          </td>
-                          <td>
-                            <strong>Rs {booking.totalPrice}</strong>
-                          </td>
-                          <td>
-                            <span
-                              className={`badge ${booking.status === "confirmed"
-                                ? "bg-success"
-                                : booking.status === "pending"
-                                  ? "bg-warning"
-                                  : "bg-danger"
-                                }`}
-                            >
-                              {booking.status}
-                            </span>
-                          </td>
-                          <td>
+              </div>
+            ) : bookings.length === 0 ? (
+              <div className="text-center py-5 bg-white rounded-4 shadow-sm">
+                <i className="bi bi-inbox" style={{ fontSize: "3rem", color: "#ccc" }}></i>
+                <p className="text-muted mt-3">No bookings yet</p>
+              </div>
+            ) : (
+              <div className="row g-3">
+                {bookings
+                  .filter(b => bookingFilter === "all" || b.status === bookingFilter)
+                  .map((booking) => (
+                  <div className="col-md-6 col-lg-4" key={booking._id}>
+                    <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                      {/* Card header with status */}
+                      <div className="card-body p-4">
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                          <div>
+                            <h6 className="fw-bold mb-1 text-dark">{booking.userId?.name || "Guest"}</h6>
+                            <small className="text-muted">{booking.userId?.email || ""}</small>
+                          </div>
+                          <span className={`badge rounded-pill px-3 py-2 ${
+                            booking.status === "confirmed" ? "bg-success" :
+                            booking.status === "pending" ? "bg-warning text-dark" :
+                            "bg-danger"
+                          }`}>
+                            {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-3 mb-3" style={{ backgroundColor: '#f8fafc' }}>
+                          <div className="d-flex align-items-center gap-2 mb-2">
+                            <i className="bi bi-building text-primary"></i>
+                            <strong className="text-dark small">{booking.hostelId?.name || "—"}</strong>
+                          </div>
+                          <div className="row g-2">
+                            <div className="col-6">
+                              <small className="text-muted d-block">Room</small>
+                              <small className="fw-semibold">{booking.roomId?.roomType || "—"}</small>
+                            </div>
+                            <div className="col-6">
+                              <small className="text-muted d-block">Beds</small>
+                              <small className="fw-semibold">{booking.bedsBooked}</small>
+                            </div>
+                            <div className="col-6">
+                              <small className="text-muted d-block">Check-in</small>
+                              <small className="fw-semibold">{new Date(booking.startDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
+                            </div>
+                            <div className="col-6">
+                              <small className="text-muted d-block">Check-out</small>
+                              <small className="fw-semibold">{new Date(booking.endDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <span className="text-muted small">Total Price</span>
+                          <span className="fw-bold text-primary fs-5">Rs {booking.totalPrice?.toLocaleString()}</span>
+                        </div>
+
+                        {/* Action buttons */}
+                        {booking.status !== "cancelled" && (
+                          <div className="d-flex gap-2">
                             <button
-                              className="btn btn-sm btn-success me-2"
+                              className="btn btn-sm flex-fill fw-semibold"
+                              style={{ backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '10px' }}
                               onClick={() => handleAcceptBooking(booking._id)}
-                              disabled={booking.status === "cancelled"}
-                              title="Accept booking"
+                              disabled={booking.status === "confirmed"}
                             >
-                              <i className="bi bi-check"></i> Accept
+                              <i className="bi bi-check-lg me-1"></i>
+                              {booking.status === "confirmed" ? "Accepted" : "Accept"}
                             </button>
                             <button
-                              className="btn btn-sm btn-danger"
+                              className="btn btn-sm flex-fill fw-semibold"
+                              style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '10px' }}
                               onClick={() => handleRejectBooking(booking._id)}
-                              disabled={booking.status === "cancelled"}
-                              title="Reject booking"
                             >
-                              <i className="bi bi-x"></i> Reject
+                              <i className="bi bi-x-lg me-1"></i> Reject
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+                          </div>
+                        )}
+                        {booking.status === "cancelled" && (
+                          <div className="text-center py-2">
+                            <small className="text-muted fst-italic">This booking was cancelled</small>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {bookings.filter(b => bookingFilter === "all" || b.status === bookingFilter).length === 0 && (
+                  <div className="col-12 text-center py-5">
+                    <p className="text-muted">No {bookingFilter} bookings found</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

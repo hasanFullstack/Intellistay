@@ -52,7 +52,7 @@ const RoomSection = () => {
             {/* Image Container */}
             <div className="relative h-64">
               <img
-                src={room?.images?.[0] || `https://picsum.photos/seed/${room._id}/800/600`}
+                src={(room?.images && room.images.length > 0) ? room.images[0] : `https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800`}
                 alt={room.description || room.roomType}
                 className="w-full h-full object-cover"
               />

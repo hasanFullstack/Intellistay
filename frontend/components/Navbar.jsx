@@ -17,9 +17,9 @@ const Navbar = ({ openAuth }) => {
   };
 
   return (
-    <header className="navbar">
-      <Banner/>
-      <div className="navbar__inner container mx-auto">
+    <header className="border-b-[1px] border-gray-300">
+      <Banner />
+      <div className="navbar__inner container mx-auto py-2">
         <div className="navbar__brand">
           <Link to="/" className="navbar__logo">
             <img

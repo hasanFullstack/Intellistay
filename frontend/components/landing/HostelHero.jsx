@@ -5,15 +5,10 @@ import { Autoplay } from "swiper/modules";
 import { Typewriter } from "react-simple-typewriter";
 
 const baseImages = [
-  "https://picsum.photos/id/1015/800/600",
-  "https://picsum.photos/id/1016/800/600",
-  "https://picsum.photos/id/1027/800/600",
-  "https://picsum.photos/id/1040/800/600",
-  "https://picsum.photos/id/1018/800/600",
-  "https://picsum.photos/id/1035/800/600",
-  "https://picsum.photos/id/1020/800/600",
-  "https://picsum.photos/id/1024/800/600",
-  "https://picsum.photos/id/1033/800/600",
+  "https://www.newportworldresorts.com/sites/default/files/inline-images/image2_9.png",
+  "https://images.pexels.com/photos/5147364/pexels-photo-5147364.jpeg",
+  "/5.jpg",
+  "/7.jpg",
 ];
 
 // Duplicate enough times so Swiper always has slides to loop over
@@ -64,7 +59,7 @@ const HeroSlider = () => {
 
         <Swiper
           modules={[Autoplay]}
-          slidesPerView={6}
+          slidesPerView={5}
           breakpoints={{
             0: {
               slidesPerView: 1,
@@ -79,7 +74,7 @@ const HeroSlider = () => {
               slidesPerView: 4,
             },
             1200: {
-              slidesPerView: 6,
+              slidesPerView: 5,
             },
           }}
           spaceBetween={20}
@@ -105,7 +100,7 @@ const HeroSlider = () => {
             <SwiperSlide key={index}>
               <div
                 style={{
-                  height: "440px",
+                  height: "370px",
                   overflow: "hidden",
                 }}
               >
