@@ -24,7 +24,7 @@ const HostelCard = ({ hostel, onBook }) => {
 
       <div className="hostel-card__body">
         <h3 className="hostel-card__title">{hostel.name}</h3>
-        <p className="hostel-card__location">📍 {hostel.location}</p>
+        <p className="hostel-card__location">📍 {hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}</p>
 
         {hostel.environmentScore && (
           <div className="hostel-card__score">

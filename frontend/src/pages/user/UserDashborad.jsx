@@ -168,10 +168,10 @@ const UserDashboard = () => {
             <h3 className="text-lg font-bold text-gray-900 truncate">
               {booking.hostelId?.name || "Unknown Hostel"}
             </h3>
-            {booking.hostelId?.location && (
+            {booking.hostelId?.city && booking.hostelId?.addressLine1 && (
               <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
                 <MapPin size={13} className="shrink-0" />
-                <span className="truncate">{booking.hostelId.location}</span>
+                <span className="truncate">{booking.hostelId.addressLine1}, {booking.hostelId.city}</span>
               </p>
             )}
           </div>
@@ -401,10 +401,10 @@ const UserDashboard = () => {
                   <p className="text-lg font-bold text-gray-900">
                     {selectedBooking.hostelId?.name || "—"}
                   </p>
-                  {selectedBooking.hostelId?.location && (
+                  {selectedBooking.hostelId?.city && selectedBooking.hostelId?.addressLine1 && (
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                       <MapPin size={12} />
-                      {selectedBooking.hostelId.location}
+                      {selectedBooking.hostelId.addressLine1}, {selectedBooking.hostelId.city}
                     </p>
                   )}
                 </div>

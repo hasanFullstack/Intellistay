@@ -16,7 +16,7 @@ export const getSuggestedPrice = async (room, hostel) => {
 
         // Map location text to a tier (simplistic for now)
         let cityTier = 2; // Default medium city
-        const loc = (hostel.location || "").toLowerCase();
+        const loc = (hostel.city || "").toLowerCase();
         if (loc.includes('islamabad') || loc.includes('lahore') || loc.includes('karachi')) {
             cityTier = 1;
         }

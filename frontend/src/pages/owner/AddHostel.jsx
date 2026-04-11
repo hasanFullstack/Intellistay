@@ -5,7 +5,9 @@ import { toast } from "react-toastify";
 const AddHostel = ({ onSuccess }) => {
   const [data, setData] = useState({
     name: "",
-    location: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
     description: "",
     amenities: "",
     rules: "",
@@ -20,8 +22,13 @@ const AddHostel = ({ onSuccess }) => {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!data.name || !data.location) {
-      setError("Name and location are required");
+    if (!data.name || !data.addressLine1 || !data.city) {
+      setError("Name, address line 1, and city are required");
+      return;
+    }
+
+    if (!data.gender || !["Male", "Female"].includes(data.gender)) {
+      setError("Please select a valid gender policy (Male or Female)");
       return;
     }
 
@@ -44,7 +51,9 @@ const AddHostel = ({ onSuccess }) => {
 
       setData({
         name: "",
-        location: "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
         description: "",
         amenities: "",
         rules: "",
@@ -117,17 +126,56 @@ const AddHostel = ({ onSuccess }) => {
       </div>
 
       <div className="mb-3">
-        <label htmlFor="location" className="form-label fw-semibold">
-          Location
+        <label htmlFor="addressLine1" className="form-label fw-semibold">
+          Address Line 1 <span className="text-danger">*</span>
         </label>
         <input
-          id="location"
+          id="addressLine1"
           type="text"
           className="form-control form-control-lg"
-          placeholder="e.g., Downtown, Main Street"
-          value={data.location}
-          onChange={(e) => setData({ ...data, location: e.target.value })}
+          placeholder="e.g., 4522 W Oak Ave"
+          value={data.addressLine1}
+          onChange={(e) => setData({ ...data, addressLine1: e.target.value })}
+          required
         />
+        <small className="text-muted d-block mt-1">
+          Primary address: House/Building Number + Street Name + Street Suffix (St, Ave, Blvd, Rd, etc.)
+        </small>
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="addressLine2" className="form-label fw-semibold">
+          Address Line 2 <span className="text-muted">(Optional)</span>
+        </label>
+        <input
+          id="addressLine2"
+          type="text"
+          className="form-control form-control-lg"
+          placeholder="e.g., Apt 3B, Suite 200, Floor 4"
+          value={data.addressLine2}
+          onChange={(e) => setData({ ...data, addressLine2: e.target.value })}
+        />
+        <small className="text-muted d-block mt-1">
+          Use for: Apartment/Suite/Unit numbers, Floor numbers, or P.O. Box (leave blank if not applicable)
+        </small>
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="city" className="form-label fw-semibold">
+          City <span className="text-danger">*</span>
+        </label>
+        <input
+          id="city"
+          type="text"
+          className="form-control form-control-lg"
+          placeholder="e.g., Chicago or Los Angeles"
+          value={data.city}
+          onChange={(e) => setData({ ...data, city: e.target.value })}
+          required
+        />
+        <small className="text-muted d-block mt-1">
+          City or town name (do not include state or postal code)
+        </small>
       </div>
 
       <div className="mb-3">
@@ -160,16 +208,18 @@ const AddHostel = ({ onSuccess }) => {
 
       <div className="mb-3">
         <label htmlFor="gender" className="form-label fw-semibold">
-          Gender Policy
+          Gender Policy <span className="text-danger">*</span>
         </label>
         <select
           id="gender"
           className="form-select form-select-lg"
           value={data.gender}
           onChange={(e) => setData({ ...data, gender: e.target.value })}
+          required
         >
-          <option>Male</option>
-          <option>Female</option>
+          <option value="">Select Gender Policy</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
         </select>
       </div>
 

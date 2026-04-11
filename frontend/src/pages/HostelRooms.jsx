@@ -36,7 +36,7 @@ const generateLocationHighlights = (hostel) => {
     {
       icon: <Navigation className="w-5 h-5 text-slate-700" />,
       title: "Prime Location",
-      description: hostel.location || "Well-located hostel",
+      description: hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Well-located hostel",
     },
     {
       icon: <ShieldCheck className="w-5 h-5 text-slate-700" />,
@@ -190,7 +190,7 @@ const HostelRooms = () => {
 
             <div className="flex items-center gap-2 mb-6">
               <span className="material-symbols-outlined !text-[#235784]"><MapPin /></span>
-              <p className="text-lg text-gray-600 font-medium mb-0">{hostel.location}</p>
+              <p className="text-lg text-gray-600 font-medium mb-0">{hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}</p>
             </div>
 
             <div className="mb-6 flex items-center gap-3">

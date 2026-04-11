@@ -57,7 +57,7 @@ export const createBooking = async (req, res) => {
 export const getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ userId: req.user.id })
-      .populate("hostelId", "name location")
+      .populate("hostelId", "name addressLine1 addressLine2 city gender")
       .populate("roomId", "roomType pricePerBed");
     res.json(bookings);
   } catch (error) {
@@ -119,7 +119,7 @@ export const getOwnerBookings = async (req, res) => {
       .populate({
         path: "hostelId",
         match: { ownerId: req.user.id },
-        select: "name location",
+        select: "name addressLine1 addressLine2 city gender",
       })
       .populate("roomId", "roomType pricePerBed")
       .populate("userId", "name email");

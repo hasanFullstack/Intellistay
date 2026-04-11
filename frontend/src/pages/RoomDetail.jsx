@@ -436,7 +436,7 @@ const RoomDetail = () => {
                 {hostel.name}
               </h1>
               <p className="text-lg text-slate-600 flex items-center gap-1">
-                <MapPin size={20} className="text-blue-600" /> {hostel.location}
+                <MapPin size={20} className="text-blue-600" /> {hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}
               </p>
             </section>
 

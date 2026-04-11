@@ -187,7 +187,9 @@ const RecommendedHostels = () => {
                 </div>
                 <p style={{ color: "#64748b", fontSize: "13px", margin: "0 0 14px", display: "flex", alignItems: "center", gap: "4px" }}>
                   <i className="bi bi-geo-alt-fill" style={{ color: "#6366f1" }}></i>
-                  {rec.hostel.location}
+                  {rec.hostel.city && rec.hostel.addressLine1
+                    ? `${rec.hostel.addressLine1}, ${rec.hostel.city}`
+                    : "Address not set"}
                 </p>
 
                 {/* Personality Match Progress */}

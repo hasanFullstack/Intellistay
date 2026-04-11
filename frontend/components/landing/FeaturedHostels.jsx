@@ -6,16 +6,8 @@ import { getRoomsByHostel } from "../../src/api/room.api";
 
 const SEATER_OPTIONS = ["Any Seater", "Single", "2 Seater", "4 Seater"];
 
-const extractCity = (location = "") => {
-  const cleaned = String(location).trim();
-  if (!cleaned) return "";
-
-  const parts = cleaned
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  return parts.length ? parts[parts.length - 1] : cleaned;
+const extractCity = (city = "") => {
+  return String(city).trim();
 };
 
 const selectedSeaterToBedCount = (selectedSeater) => {
@@ -83,13 +75,13 @@ const FeaturedHostels = () => {
 
     return hostelList.filter((hostel) => {
       const name = (hostel?.name || "").toLowerCase();
-      const loc = (hostel?.location || "").toLowerCase();
+      const city = (hostel?.city || "").toLowerCase();
       const description = (hostel?.description || "").toLowerCase();
 
       const matchesText =
-        !q || name.includes(q) || loc.includes(q) || description.includes(q);
+        !q || name.includes(q) || city.includes(q) || description.includes(q);
 
-      const hostelCity = extractCity(hostel?.location || "");
+      const hostelCity = extractCity(hostel?.city || "");
       const matchesLocation =
         location === "Any Location" ||
         hostelCity.toLowerCase() === String(location).toLowerCase();
@@ -175,7 +167,7 @@ const FeaturedHostels = () => {
     const uniqueLocations = [
       ...new Set(
         latestEight
-          .map((h) => extractCity(h?.location || ""))
+          .map((h) => h?.city || "")
           .filter((city) => Boolean(city)),
       ),
     ];
@@ -379,7 +371,9 @@ const FeaturedHostels = () => {
                       {hostel?.name || "Untitled Hostel"}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-                      {hostel?.location || "Location not set"}
+                      {hostel?.city && hostel?.addressLine1
+                        ? `${hostel.addressLine1}, ${hostel.city}`
+                        : "Address not set"}
                     </p>
                     <p className="text-sm text-gray-600 mt-2 line-clamp-2 min-h-[40px]">
                       {hostel?.description ||

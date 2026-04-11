@@ -52,7 +52,7 @@ export const getAllRooms = async (req, res) => {
       { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, description: 1, hostelId: 1 }
     )
       .sort({ createdAt: -1 })
-      .populate('hostelId', 'name city');
+      .populate('hostelId', 'name city addressLine1 addressLine2 city gender');
     if (limit > 0) query = query.limit(limit);
     const rooms = await query.lean();
     res.json(rooms);

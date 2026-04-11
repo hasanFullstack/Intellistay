@@ -60,7 +60,10 @@ export const getStudentRecommendations = async (req, res) => {
           hostel: {
             _id: env.hostelId._id,
             name: env.hostelId.name,
-            location: env.hostelId.location,
+            gender: env.hostelId.gender,
+            addressLine1: env.hostelId.addressLine1,
+            addressLine2: env.hostelId.addressLine2,
+            city: env.hostelId.city,
             amenities: env.hostelId.amenities,
             images: env.hostelId.images,
             owner: env.hostelId.ownerId?.name || "Unknown",

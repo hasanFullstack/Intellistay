@@ -79,7 +79,7 @@ const Hostels = () => {
   const applyFilters = (hostelList, filter, search, gender) => {
     let filtered = hostelList.filter((hostel) =>
       hostel.name.toLowerCase().includes(search.toLowerCase()) ||
-      hostel.location.toLowerCase().includes(search.toLowerCase())
+      (hostel.city && hostel.city.toLowerCase().includes(search.toLowerCase()))
     );
 
     // Apply gender filter (filter treats undefined/null as "Male")
@@ -153,7 +153,7 @@ const Hostels = () => {
               <i className="bi bi-search"></i>
               <input
                 type="text"
-                placeholder="Search by hostel name or location..."
+                placeholder="Search by hostel name or city..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="search-input"
@@ -183,7 +183,7 @@ const Hostels = () => {
                     style={{ borderRadius: "9999px" }}
                     className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
                       filterGender === "all"
-                        ? "bg-blue-600 text-white hover:opacity-95"
+                        ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                     }`}
                   >
@@ -194,7 +194,7 @@ const Hostels = () => {
                     style={{ borderRadius: "9999px" }}
                     className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
                       filterGender === "Male"
-                        ? "bg-blue-600 text-white hover:opacity-95"
+                        ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                     }`}
                   >
@@ -205,7 +205,7 @@ const Hostels = () => {
                     style={{ borderRadius: "9999px" }}
                     className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
                       filterGender === "Female"
-                        ? "bg-blue-600 text-white hover:opacity-95"
+                        ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                     }`}
                   >
@@ -330,7 +330,7 @@ const Hostels = () => {
                       <i className="bi bi-geo-alt-fill"></i>
                       <div className="info-content">
                         <label>Location</label>
-                        <p>{hostel.location}</p>
+                        <p>{hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}</p>
                       </div>
                     </div>
 

@@ -108,7 +108,7 @@ const Rooms = () => {
                       />
                       <div className="hostel-name">{hostel.name}</div>
                       <div className="hostel-location">
-                        <i className="bi bi-geo-alt"></i> {hostel.location}
+                        <i className="bi bi-geo-alt"></i> {hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}
                       </div>
                     </button>
                   ))}
@@ -137,7 +137,7 @@ const Rooms = () => {
                   <div className="hostel-header">
                     <h2 className="hostel-name-large">{currentHostel.name}</h2>
                     <span className="hostel-location-large">
-                      <i className="bi bi-geo-alt"></i> {currentHostel.location}
+                      <i className="bi bi-geo-alt"></i> {currentHostel.city && currentHostel.addressLine1 ? `${currentHostel.addressLine1}, ${currentHostel.city}` : "Address not set"}
                     </span>
                   </div>
                   {currentHostel.description && (

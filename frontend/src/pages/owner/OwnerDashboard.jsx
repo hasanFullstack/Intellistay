@@ -373,7 +373,7 @@ const OwnerDashboard = () => {
                                 <div className="col-md-3">
                                   <strong>{hostel.name}</strong>
                                   <div className="small text-muted">
-                                    {hostel.location}
+                                    {hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}
                                   </div>
                                 </div>
                                 <div className="col-md-2">

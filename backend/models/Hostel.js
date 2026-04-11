@@ -11,7 +11,15 @@ const hostelSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    location: {
+    addressLine1: {
+      type: String,
+      required: true,
+    },
+    addressLine2: {
+      type: String,
+      default: "",
+    },
+    city: {
       type: String,
       required: true,
     },
@@ -30,6 +38,7 @@ const hostelSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: ["Male", "Female"],
+      required: true,
       default: "Male",
     },
   },
