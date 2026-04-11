@@ -2,6 +2,10 @@
   min-height: calc(100vh - 60px);
 }
 
+.hostel-rooms-shell {
+  padding-top: 0 !important;
+}
+
 .hostel-rooms-header {
   position: relative;
 }

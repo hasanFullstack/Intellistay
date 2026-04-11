@@ -13,7 +13,6 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   const [selectedHostel, setSelectedHostel] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterGender, setFilterGender] = useState("all");
 
   useEffect(() => {
     loadHostels();
@@ -53,18 +52,15 @@ const Rooms = () => {
     setSelectedHostel(hostelId);
     loadRoomsForHostel(hostelId);
     setSearchTerm("");
-    setFilterGender("all");
   };
 
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = room.roomType
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesGender =
-      filterGender === "all" || room.gender === filterGender;
     const hasAvailableBeds = room.availableBeds > 0;
 
-    return matchesSearch && matchesGender && hasAvailableBeds;
+    return matchesSearch && hasAvailableBeds;
   });
 
   const currentHostel = hostels.find((h) => h._id === selectedHostel);
@@ -133,19 +129,6 @@ const Rooms = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-
-                <div className="filter-group">
-                  <select
-                    className="form-select"
-                    value={filterGender}
-                    onChange={(e) => setFilterGender(e.target.value)}
-                  >
-                    <option value="all">All Genders</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Co-ed">Co-ed</option>
-                  </select>
-                </div>
               </div>
 
               {/* Hostel Info Card */}
@@ -162,6 +145,14 @@ const Rooms = () => {
                       {currentHostel.description}
                     </p>
                   )}
+                  <div style={{ marginBottom: "10px" }}>
+                    <strong>Gender Policy:</strong>{" "}
+                    <span
+                      className={`gender-badge gender-${(currentHostel.gender || "male").toLowerCase()}`}
+                    >
+                      {currentHostel.gender || "Male"}
+                    </span>
+                  </div>
                   {currentHostel.amenities &&
                     currentHostel.amenities.length > 0 && (
                       <div className="amenities-section">
@@ -201,11 +192,6 @@ const Rooms = () => {
 
                       <div className="room-header">
                         <h5 className="room-type">{room.roomType}</h5>
-                        <span
-                          className={`gender-badge gender-${room.gender.toLowerCase()}`}
-                        >
-                          {room.gender}
-                        </span>
                       </div>
 
                       <div className="room-details">

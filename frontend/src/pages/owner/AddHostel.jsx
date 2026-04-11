@@ -9,6 +9,7 @@ const AddHostel = ({ onSuccess }) => {
     description: "",
     amenities: "",
     rules: "",
+    gender: "Male",
     environmentScore: 50,
     images: [],
   });
@@ -47,6 +48,7 @@ const AddHostel = ({ onSuccess }) => {
         description: "",
         amenities: "",
         rules: "",
+        gender: "Male",
         environmentScore: 50,
         images: [],
       });
@@ -157,6 +159,21 @@ const AddHostel = ({ onSuccess }) => {
       </div>
 
       <div className="mb-3">
+        <label htmlFor="gender" className="form-label fw-semibold">
+          Gender Policy
+        </label>
+        <select
+          id="gender"
+          className="form-select form-select-lg"
+          value={data.gender}
+          onChange={(e) => setData({ ...data, gender: e.target.value })}
+        >
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+
+      <div className="mb-3">
         <label htmlFor="rules" className="form-label fw-semibold">
           House Rules
         </label>
@@ -168,23 +185,6 @@ const AddHostel = ({ onSuccess }) => {
           onChange={(e) => setData({ ...data, rules: e.target.value })}
           rows="3"
         ></textarea>
-      </div>
-
-      <div className="mb-3">
-        <label htmlFor="environmentScore" className="form-label fw-semibold">
-          Environment Score: {data.environmentScore}
-        </label>
-        <input
-          id="environmentScore"
-          type="range"
-          className="form-range"
-          min="0"
-          max="100"
-          value={data.environmentScore}
-          onChange={(e) =>
-            setData({ ...data, environmentScore: Number(e.target.value) })
-          }
-        />
       </div>
 
       <div className="mb-3">
