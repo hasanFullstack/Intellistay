@@ -171,15 +171,20 @@ const HostelRooms = () => {
   }
 
   return (
-    <div className="rooms-page text-on-surface">
-      <div className="pt-24 pb-32 max-w-[1440px] mx-auto px-6 md:px-12">
-        {/* Back */}
-        <div className="mb-8">
-          <button onClick={() => navigate('/hostels')} className="inline-flex items-center gap-2 text-[#235784] hover:text-[#00317a] font-semibold">
-            <ArrowLeft />
+    <div className="rooms-page hostel-rooms-shell text-on-surface">
+      <div className="bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-4">
+          <button
+            onClick={() => navigate("/hostels")}
+            className="flex items-center gap-2 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition font-medium"
+          >
+            <ArrowLeft size={18} />
             Back to Hostels
           </button>
         </div>
+      </div>
+
+      <div className="pt-8 pb-32 max-w-[1440px] mx-auto px-6 md:px-12">
 
         {/* HERO */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">

@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getRoomById, getRoomsByHostel } from "../api/room.api";
+import { getRoomById, getRoomsByHostel, getRoomOccupants } from "../api/room.api";
 import { getHostelById } from "../api/hostel.api";
-import { createBooking, createCheckoutSession } from "../api/booking.api";
+import { createCheckoutSession } from "../api/booking.api";
 import { loadStripe } from "@stripe/stripe-js";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   VolumeX,
   CigaretteOff,
+  ArrowLeft
 } from "lucide-react";
 
 const getAmenityIcon = (amenityStr) => {
@@ -58,7 +59,6 @@ const RoomDetail = () => {
   const [hostel, setHostel] = useState(null);
   const [relatedRooms, setRelatedRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Booking modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -75,6 +75,15 @@ const RoomDetail = () => {
   const [showSphereViewer, setShowSphereViewer] = useState(false);
   const [sphereIndex, setSphereIndex] = useState(0);
   const [sphereImages, setSphereImages] = useState([]);
+  const [occupants, setOccupants] = useState([]);
+  const [occupantLoading, setOccupantLoading] = useState(false);
+  const [occupantError, setOccupantError] = useState(false);
+  const [occupancySummary, setOccupancySummary] = useState({
+    totalOccupiedBeds: 0,
+    visibleOccupiedBeds: 0,
+    profiledOccupiedBeds: 0,
+    unprofiledOccupiedBeds: 0,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,7 +100,7 @@ const RoomDetail = () => {
           (r) => r._id !== roomId && r.availableBeds > 0,
         );
         setRelatedRooms(filtered.slice(0, 3));
-      } catch (err) {
+      } catch {
         toast.error("Failed to load room details");
       } finally {
         setLoading(false);
@@ -102,6 +111,59 @@ const RoomDetail = () => {
       fetchData();
     }
   }, [roomId, hostelId]);
+
+  // Fetch current occupants for this room (and compute compatibility server-side)
+  useEffect(() => {
+    const fetchOccupants = async () => {
+      try {
+        setOccupantLoading(true);
+        setOccupantError(false);
+        const res = await getRoomOccupants(roomId);
+        setOccupants(res.data.occupants || []);
+        setOccupancySummary(
+          res.data.summary || {
+            totalOccupiedBeds: 0,
+            visibleOccupiedBeds: 0,
+            profiledOccupiedBeds: 0,
+            unprofiledOccupiedBeds: 0,
+          },
+        );
+      } catch {
+        // ignore - compatibility optional
+        setOccupants([]);
+        setOccupantError(true);
+        setOccupancySummary({
+          totalOccupiedBeds: 0,
+          visibleOccupiedBeds: 0,
+          profiledOccupiedBeds: 0,
+          unprofiledOccupiedBeds: 0,
+        });
+      } finally {
+        setOccupantLoading(false);
+      }
+    };
+
+    const isStudent = user?.role === "student";
+    const roomTypeLower = String(room?.roomType || "").toLowerCase();
+    const totalBeds = Number(room?.totalBeds || 0);
+    const isSingleBedRoom =
+      roomTypeLower === "single" || (totalBeds > 0 && totalBeds <= 1);
+
+    if (!isStudent || isSingleBedRoom) {
+      setOccupants([]);
+      setOccupantLoading(false);
+      setOccupantError(false);
+      setOccupancySummary({
+        totalOccupiedBeds: 0,
+        visibleOccupiedBeds: 0,
+        profiledOccupiedBeds: 0,
+        unprofiledOccupiedBeds: 0,
+      });
+      return;
+    }
+
+    if (roomId) fetchOccupants();
+  }, [roomId, user?.role, room?.roomType, room?.totalBeds]);
 
   // Close calendars when clicking outside
   useEffect(() => {
@@ -124,20 +186,6 @@ const RoomDetail = () => {
     document.addEventListener("mousedown", handleDocClick);
     return () => document.removeEventListener("mousedown", handleDocClick);
   }, [startDate, endDate]);
-
-  const handlePrevImage = () => {
-    if (room?.images?.length) {
-      setSelectedImageIndex(
-        (prev) => (prev - 1 + room.images.length) % room.images.length,
-      );
-    }
-  };
-
-  const handleNextImage = () => {
-    if (room?.images?.length) {
-      setSelectedImageIndex((prev) => (prev + 1) % room.images.length);
-    }
-  };
 
   const handleBooking = () => {
     if (!user) {
@@ -198,22 +246,11 @@ const RoomDetail = () => {
     try {
       setBookingLoading(true);
 
-      // Create a Checkout Session on the server
+      // TEMP: send minimal payload to isolate server error (no images/objects)
       const sessionRes = await createCheckoutSession({
-        hostelId,
         roomId,
-        startDate,
-        endDate,
-        bedsBooked,
         amount: calculateTotalPrice(),
-        currency: "INR",
-        productName: `${hostel?.name || "Hostel"} — ${room?.roomType || "Room"}`,
-        productDescription: room?.description,
-        productImages:
-          room?.images && room.images.length ? [room.images[0]] : undefined,
-        // include full backend room + hostel objects so server has complete data
-        roomData: room,
-        hostelData: hostel,
+        currency: "PKR",
       });
 
       setShowBookingModal(false);
@@ -247,10 +284,6 @@ const RoomDetail = () => {
     }
   };
 
-  const getTodayStr = () => {
-    return new Date().toISOString().split("T")[0];
-  };
-
   const formatIsoToDDMMYYYY = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -263,7 +296,7 @@ const RoomDetail = () => {
 
   const parseDDMMYYYYToIso = (s) => {
     if (!s) return "";
-    const parts = s.split(/[\/\-\.]/);
+    const parts = s.split(/[./-]/);
     if (parts.length !== 3) return "";
     let [dd, mm, yyyy] = parts;
     if (dd.length === 1) dd = "0" + dd;
@@ -303,7 +336,7 @@ const RoomDetail = () => {
           <p className="text-gray-600 mb-4">Room not found</p>
           <button
             onClick={() => navigate(backToRoomsPath)}
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="inline-block px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition"
           >
             Back to Hostel Rooms
           </button>
@@ -312,16 +345,31 @@ const RoomDetail = () => {
     );
   }
 
+  const totalBeds = Number(room?.totalBeds || 0);
+  const availableBeds = Number(room?.availableBeds || 0);
+  const roomTypeLower = String(room?.roomType || "").toLowerCase();
+  const isSingleOccupancyRoom =
+    roomTypeLower === "single" || (totalBeds > 0 && totalBeds <= 1);
+  const bookedBedsFromRoom = totalBeds > 0 ? Math.max(totalBeds - availableBeds, 0) : 0;
+  const bookedBeds = Math.max(
+    bookedBedsFromRoom,
+    Number(occupancySummary?.totalOccupiedBeds || 0),
+  );
+  const unprofiledOccupiedBeds = Number(
+    occupancySummary?.unprofiledOccupiedBeds || 0,
+  );
+
   return (
     <div className="bg-slate-50 font-sans text-slate-900 min-h-screen">
       {/* Top Navbar replacement - we already have global Nav, but we can put a "Back" bar here */}
-      <div className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
+      <div className="bg-white/80 backdrop-blur-md shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <button
             onClick={() => navigate(backToRoomsPath)}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition font-medium"
+            className="flex items-center gap-2 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition font-medium"
           >
-            ← Back to {hostel.name}
+            <ArrowLeft size={18} />
+            Back to {hostel.name}
           </button>
         </div>
       </div>
@@ -431,12 +479,11 @@ const RoomDetail = () => {
                   {room.totalBeds} BEDS AVAILABLE
                 </span>
               </div>
-
               <h1 className="text-5xl font-extrabold text-blue-900 leading-[1.1] mb-2 tracking-tight font-headline">
                 {hostel.name}
               </h1>
               <p className="text-lg text-slate-600 flex items-center gap-1">
-                <MapPin size={20} className="text-blue-600" /> {hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}
+                <MapPin size={20} className="text-[var(--color-primary)]" /> {hostel.city && hostel.addressLine1 ? `${hostel.addressLine1}, ${hostel.city}` : "Address not set"}
               </p>
             </section>
 
@@ -460,7 +507,7 @@ const RoomDetail = () => {
                 {hostel.amenities && hostel.amenities.length > 0 ? (
                   hostel.amenities.map((amenity, idx) => (
                     <div key={idx} className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center text-blue-600">
+                      <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center text-[#235784]">
                         {getAmenityIcon(amenity)}
                       </div>
                       <span className="font-medium capitalize text-slate-700">
@@ -510,6 +557,95 @@ const RoomDetail = () => {
                 </div>
               )}
             </section>
+            {/* Roommate Compatibility */}
+            {!isSingleOccupancyRoom && (
+              <section className="mt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-blue-900 font-headline">
+                    Roommate Compatibility
+                  </h2>
+                  <span className="text-xs font-semibold uppercase tracking-wide px-3 py-1 rounded-full bg-slate-100 text-slate-600">
+                    {bookedBeds} bed{bookedBeds !== 1 ? "s" : ""} occupied
+                  </span>
+                </div>
+
+                {!user || user.role !== "student" ? (
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <p className="text-slate-600">
+                      This section is available for student accounts. Log in as a student to view roommate compatibility.
+                    </p>
+                  </div>
+                ) : bookedBeds === 0 ? (
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <p className="text-slate-600">There is no student in this room yet.</p>
+                  </div>
+                ) : occupantLoading ? (
+                  <p className="text-slate-600">Loading compatibility...</p>
+                ) : occupantError ? (
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <p className="text-slate-600">
+                      Compatibility details are temporarily unavailable. Please try again shortly.
+                    </p>
+                  </div>
+                ) : occupants && occupants.length > 0 ? (
+                  <div className="space-y-4">
+                    {occupants.map((o, idx) => (
+                      <div
+                        key={o._id}
+                        className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">
+                            {Array.isArray(o.bedNumbers) && o.bedNumbers.length > 0
+                              ? `Bed${o.bedNumbers.length > 1 ? "s" : ""} ${o.bedNumbers.join(", ")}`
+                              : o.bedsBooked > 1
+                                ? `${o.bedsBooked} beds occupied`
+                                : `Bed ${idx + 1}`}
+                          </p>
+                          <p className="font-semibold text-slate-800">{o.name}</p>
+                          {o.similarityScore ? (
+                            <p className="text-sm text-slate-600">
+                              {o.matchLabel?.text} {o.matchLabel?.emoji}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-slate-500">Compatibility unavailable</p>
+                          )}
+                        </div>
+
+                        {o.similarityScore ? (
+                          <div className="text-right">
+                            <div className="text-2xl font-extrabold text-blue-900">
+                              {o.similarityScore}%
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {o.topMatches?.map((t) => t.label).join(" · ")}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+
+                    {unprofiledOccupiedBeds > 0 && (
+                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <p className="text-sm text-slate-600">
+                          {unprofiledOccupiedBeds} booked bed
+                          {unprofiledOccupiedBeds !== 1 ? "s" : ""} currently have no profile data,
+                          so compatibility is not available for those student(s) yet.
+                        </p>
+                      </div>
+                    )}
+
+                  </div>
+                ) : (
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <p className="text-slate-600">
+                      {bookedBeds} bed{bookedBeds !== 1 ? "s are" : " is"} booked, but we don’t
+                      have profile data for the current student(s) yet.
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
           </div>
 
           {/* Booking Sidebar */}
@@ -520,7 +656,7 @@ const RoomDetail = () => {
                   <span className="text-4xl font-black text-blue-900 tracking-tighter">
                     Rs {room.pricePerBed}
                   </span>
-                  <span className="text-slate-600 font-medium">/month</span>
+                  <span className="text-slate-600 font-medium"> /month</span>
                 </div>
               </div>
 
@@ -529,7 +665,7 @@ const RoomDetail = () => {
                   <p className="text-xs font-bold text-slate-500 mb-1 tracking-widest uppercase">
                     ROOM TYPE
                   </p>
-                  <p className="font-semibold text-blue-900 capitalize">
+                  <p className="font-semibold text-[var(--color-primary)]  capitalize">
                     {room.roomType}
                   </p>
                 </div>
@@ -538,7 +674,7 @@ const RoomDetail = () => {
                     <p className="text-xs font-bold text-slate-500 mb-1 tracking-widest uppercase">
                       STAY PERIOD
                     </p>
-                    <p className="font-semibold text-blue-900">
+                    <p className="font-semibold text-[var(--color-primary)] ">
                       Monthly Subscription
                     </p>
                   </div>
@@ -550,7 +686,7 @@ const RoomDetail = () => {
                 disabled={room.availableBeds === 0}
                 className={`w-full py-4 text-white font-bold rounded-lg text-lg shadow-lg hover:scale-[0.98] transition-transform ${
                   room.availableBeds > 0
-                    ? "bg-blue-600 shadow-blue-600/20"
+                    ? "bg-[var(--color-primary)] shadow-blue-600/20"
                     : "bg-slate-400 cursor-not-allowed shadow-none"
                 }`}
               >
@@ -614,13 +750,13 @@ const RoomDetail = () => {
                       {relRoom.roomType}
                     </h3>
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-blue-900">
+                      <span className="text-lg font-bold text-[var(--color-primary)]">
                         Rs {relRoom.pricePerBed}
                         <span className="text-sm font-normal text-slate-400">
-                          /mo
+                          /month
                         </span>
                       </span>
-                      <button className="px-4 py-2 bg-slate-100 text-blue-800 text-sm font-bold rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <button className="px-4 py-2 bg-slate-100 text-[var(--color-primary)]  text-sm font-bold rounded-lg group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors">
                         View Details
                       </button>
                     </div>
