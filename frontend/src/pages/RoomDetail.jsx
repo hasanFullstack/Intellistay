@@ -144,10 +144,12 @@ const RoomDetail = () => {
     };
 
     const isStudent = user?.role === "student";
-    const isSingleBedRoom = Number(room?.totalBeds || 0) <= 1;
-    const hasAnyBookedBed = Number(room?.availableBeds || 0) < Number(room?.totalBeds || 0);
+    const roomTypeLower = String(room?.roomType || "").toLowerCase();
+    const totalBeds = Number(room?.totalBeds || 0);
+    const isSingleBedRoom =
+      roomTypeLower === "single" || (totalBeds > 0 && totalBeds <= 1);
 
-    if (!isStudent || isSingleBedRoom || !hasAnyBookedBed) {
+    if (!isStudent || isSingleBedRoom) {
       setOccupants([]);
       setOccupantLoading(false);
       setOccupantError(false);
@@ -161,7 +163,7 @@ const RoomDetail = () => {
     }
 
     if (roomId) fetchOccupants();
-  }, [roomId, user?.role, room?.totalBeds, room?.availableBeds]);
+  }, [roomId, user?.role, room?.roomType, room?.totalBeds]);
 
   // Close calendars when clicking outside
   useEffect(() => {
@@ -356,7 +358,14 @@ const RoomDetail = () => {
 
   const totalBeds = Number(room?.totalBeds || 0);
   const availableBeds = Number(room?.availableBeds || 0);
-  const bookedBeds = Math.max(totalBeds - availableBeds, 0);
+  const roomTypeLower = String(room?.roomType || "").toLowerCase();
+  const isSingleOccupancyRoom =
+    roomTypeLower === "single" || (totalBeds > 0 && totalBeds <= 1);
+  const bookedBedsFromRoom = totalBeds > 0 ? Math.max(totalBeds - availableBeds, 0) : 0;
+  const bookedBeds = Math.max(
+    bookedBedsFromRoom,
+    Number(occupancySummary?.totalOccupiedBeds || 0),
+  );
   const unprofiledOccupiedBeds = Number(
     occupancySummary?.unprofiledOccupiedBeds || 0,
   );
@@ -473,8 +482,10 @@ const RoomDetail = () => {
             {/* Title & Meta */}
             <section>
               <div className="flex items-center gap-3 mb-4">
-                
-                <span className="px-3 py-1 bg-[var(--color-primary)] text-white rounded-full text-xs font-bold tracking-wider flex items-center gap-1 uppercase">
+                <span className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-xs font-bold tracking-wider uppercase">
+                  {hostel?.gender || "Male"} ONLY
+                </span>
+                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold tracking-wider flex items-center gap-1 uppercase">
                   <CheckCircle2 size={14} /> {room.availableBeds}/
                   {room.totalBeds} BEDS AVAILABLE
                 </span>
@@ -558,7 +569,7 @@ const RoomDetail = () => {
               )}
             </section>
             {/* Roommate Compatibility */}
-            {user && user.role === "student" && totalBeds > 1 && (
+            {!isSingleOccupancyRoom && (
               <section className="mt-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-blue-900 font-headline">
@@ -569,7 +580,13 @@ const RoomDetail = () => {
                   </span>
                 </div>
 
-                {bookedBeds === 0 ? (
+                {!user || user.role !== "student" ? (
+                  <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
+                    <p className="text-slate-600">
+                      This section is available for student accounts. Log in as a student to view roommate compatibility.
+                    </p>
+                  </div>
+                ) : bookedBeds === 0 ? (
                   <div className="p-4 bg-white rounded-lg border border-slate-100 shadow-sm">
                     <p className="text-slate-600">There is no student in this room yet.</p>
                   </div>
@@ -738,7 +755,7 @@ const RoomDetail = () => {
 
                   <div className="p-6">
                     <p className="text-xs font-bold text-slate-500 mb-2 tracking-widest uppercase">
-                      {relRoom.gender} SHARED
+                      {hostel?.gender || "Male"} SHARED
                     </p>
                     <h3 className="text-xl font-bold text-blue-900 mb-4 leading-tight">
                       {relRoom.roomType}

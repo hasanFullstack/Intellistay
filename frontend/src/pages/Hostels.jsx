@@ -37,6 +37,7 @@ const Hostels = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredHostels, setFilteredHostels] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("All Hostels");
+  const [filterGender, setFilterGender] = useState("all");
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -59,19 +60,7 @@ const Hostels = () => {
       const res = await getAllHostels();
       const freshHostels = res.data || [];
       setHostels(freshHostels);
-      setFilteredHostels((prev) => {
-        if (!searchTerm) return freshHostels;
-
-        return freshHostels.filter(
-          (hostel) =>
-            (hostel.name || "")
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            (hostel.location || "")
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase()),
-        );
-      });
+      applyFilters(freshHostels, selectedFilter, searchTerm, filterGender);
       writeCachedHostels(freshHostels);
     } catch (err) {
       if (!cachedHostels?.length) {
@@ -84,11 +73,20 @@ const Hostels = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value);
-    const filtered = hostels.filter(
-      (hostel) =>
-        hostel.name.toLowerCase().includes(value.toLowerCase()) ||
-        hostel.location.toLowerCase().includes(value.toLowerCase()),
+    applyFilters(hostels, selectedFilter, value, filterGender);
+  };
+
+  const applyFilters = (hostelList, filter, search, gender) => {
+    let filtered = hostelList.filter((hostel) =>
+      hostel.name.toLowerCase().includes(search.toLowerCase()) ||
+      hostel.location.toLowerCase().includes(search.toLowerCase())
     );
+
+    // Apply gender filter (filter treats undefined/null as "Male")
+    if (gender !== "all") {
+      filtered = filtered.filter((hostel) => (hostel.gender || "Male") === gender);
+    }
+
     setFilteredHostels(filtered);
   };
 
@@ -101,18 +99,9 @@ const Hostels = () => {
 
     setSelectedFilter(value);
 
-    const matchesSearch = (h) => {
-      if (!searchTerm) return true;
-      return (
-        (h.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (h.location || "").toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    };
-
     // For 'All Hostels' keep using local state
     if (value === "All Hostels") {
-      const filtered = hostels.filter(matchesSearch);
-      setFilteredHostels(filtered);
+      applyFilters(hostels, value, searchTerm, filterGender);
       return;
     }
 
@@ -122,13 +111,22 @@ const Hostels = () => {
         setLoading(true);
         const res = await getAllHostels(value);
         const data = res.data || [];
-        setFilteredHostels(data.filter(matchesSearch));
+        applyFilters(data, value, searchTerm, filterGender);
       } catch (err) {
         toast.error("Filter request failed");
       } finally {
         setLoading(false);
       }
     })();
+  };
+
+  const handleGenderFilter = (gender) => {
+    setFilterGender(gender);
+    if (selectedFilter === "All Hostels") {
+      applyFilters(hostels, selectedFilter, searchTerm, gender);
+    } else {
+      applyFilters(filteredHostels, selectedFilter, searchTerm, gender);
+    }
   };
 
   // Close auth modal callback also resets selectedFilter to All Hostels
@@ -173,26 +171,63 @@ const Hostels = () => {
           </div>
         ) : filteredHostels.length === 0 ? (
           <div className="hostels-container">
-            <div className="flex results-info justify-between items-center">
+            <div className="flex results-info justify-between items-center gap-4">
               <p>
                 Showing <strong>{filteredHostels.length}</strong> hostel
                 {filteredHostels.length !== 1 ? "s" : ""}
               </p>
-              <div className="dropdown">
-                {user?.role === "student" && (
-                  <Select
-                    value={selectedFilter}
-                    onChange={handleFilterChange}
-                    style={{ width: 220 }}
-                    options={[
-                      { label: "All Hostels", value: "All Hostels" },
-                      { label: "Available Now", value: "available" },
-                      { label: "Recommended", value: "recommended" },
-                      { label: "Most Popular", value: "popular" },
-                      { label: "Budget Friendly", value: "budget" },
-                    ]}
-                  />
-                )}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleGenderFilter("all")}
+                    style={{ borderRadius: "9999px" }}
+                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
+                      filterGender === "all"
+                        ? "bg-blue-600 text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                    }`}
+                  >
+                    All Genders
+                  </button>
+                  <button
+                    onClick={() => handleGenderFilter("Male")}
+                    style={{ borderRadius: "9999px" }}
+                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
+                      filterGender === "Male"
+                        ? "bg-blue-600 text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                    }`}
+                  >
+                    Male
+                  </button>
+                  <button
+                    onClick={() => handleGenderFilter("Female")}
+                    style={{ borderRadius: "9999px" }}
+                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
+                      filterGender === "Female"
+                        ? "bg-blue-600 text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                    }`}
+                  >
+                    Female
+                  </button>
+                </div>
+                <div className="dropdown">
+                  {user?.role === "student" && (
+                    <Select
+                      value={selectedFilter}
+                      onChange={handleFilterChange}
+                      style={{ width: 220 }}
+                      options={[
+                        { label: "All Hostels", value: "All Hostels" },
+                        { label: "Available Now", value: "available" },
+                        { label: "Recommended", value: "recommended" },
+                        { label: "Most Popular", value: "popular" },
+                        { label: "Budget Friendly", value: "budget" },
+                      ]}
+                    />
+                  )}
+                </div>
               </div>
             </div>
             <div className="empty-state">
@@ -207,26 +242,63 @@ const Hostels = () => {
           </div>
         ) : (
           <div className="hostels-container">
-            <div className="flex results-info justify-between items-center">
+            <div className="flex results-info justify-between items-center gap-4">
               <p>
                 Showing <strong>{filteredHostels.length}</strong> hostel
                 {filteredHostels.length !== 1 ? "s" : ""}
               </p>
-              <div className="dropdown">
-                {user?.role === "student" && (
-                  <Select
-                    value={selectedFilter}
-                    onChange={handleFilterChange}
-                    style={{ width: 220 }}
-                    options={[
-                      { label: "All Hostels", value: "All Hostels" },
-                      { label: "Available Now", value: "available" },
-                      { label: "Recommended", value: "recommended" },
-                      { label: "Most Popular", value: "popular" },
-                      { label: "Budget Friendly", value: "budget" },
-                    ]}
-                  />
-                )}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleGenderFilter("all")}
+                    style={{ borderRadius: "9999px" }}
+                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
+                      filterGender === "all"
+                        ? "bg-blue-600 text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                    }`}
+                  >
+                    All Genders
+                  </button>
+                  <button
+                    onClick={() => handleGenderFilter("Male")}
+                    style={{ borderRadius: "9999px" }}
+                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
+                      filterGender === "Male"
+                        ? "bg-blue-600 text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                    }`}
+                  >
+                    Male
+                  </button>
+                  <button
+                    onClick={() => handleGenderFilter("Female")}
+                    style={{ borderRadius: "9999px" }}
+                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${
+                      filterGender === "Female"
+                        ? "bg-blue-600 text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                    }`}
+                  >
+                    Female
+                  </button>
+                </div>
+                <div className="dropdown">
+                  {user?.role === "student" && (
+                    <Select
+                      value={selectedFilter}
+                      onChange={handleFilterChange}
+                      style={{ width: 220 }}
+                      options={[
+                        { label: "All Hostels", value: "All Hostels" },
+                        { label: "Available Now", value: "available" },
+                        { label: "Recommended", value: "recommended" },
+                        { label: "Most Popular", value: "popular" },
+                        { label: "Budget Friendly", value: "budget" },
+                      ]}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -259,6 +331,19 @@ const Hostels = () => {
                       <div className="info-content">
                         <label>Location</label>
                         <p>{hostel.location}</p>
+                      </div>
+                    </div>
+
+                    {/* Gender Policy */}
+                    <div className="info-item">
+                      <i className="bi bi-people-fill"></i>
+                      <div className="info-content">
+                        <label>Gender Policy</label>
+                        <p className="fw-semibold">
+                          <span className={`badge bg-${hostel.gender === "Male" ? "info" : "warning"}`}>
+                            {hostel.gender || "Male"}
+                          </span>
+                        </p>
                       </div>
                     </div>
 

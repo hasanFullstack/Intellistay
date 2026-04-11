@@ -491,7 +491,6 @@ const OwnerDashboard = () => {
                                   <thead className="table-light">
                                     <tr>
                                       <th>Type</th>
-                                      <th>Gender</th>
                                       <th>Total Beds</th>
                                       <th>Available Beds</th>
                                       <th>Price/Bed (Rs)</th>
@@ -504,7 +503,6 @@ const OwnerDashboard = () => {
                                         <td>
                                           <strong>{room.roomType}</strong>
                                         </td>
-                                        <td>{room.gender}</td>
                                         <td>{room.totalBeds}</td>
                                         <td>
                                           <span

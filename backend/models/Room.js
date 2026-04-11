@@ -24,11 +24,6 @@ const roomSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    gender: {
-      type: String,
-      enum: ["Male", "Female", "Co-ed"],
-      default: "Co-ed",
-    },
     images: [String],
     description: String,
   },
