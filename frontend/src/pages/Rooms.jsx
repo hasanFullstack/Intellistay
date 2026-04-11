@@ -148,9 +148,9 @@ const Rooms = () => {
                   <div style={{ marginBottom: "10px" }}>
                     <strong>Gender Policy:</strong>{" "}
                     <span
-                      className={`gender-badge gender-${(currentHostel.gender || "co-ed").toLowerCase()}`}
+                      className={`gender-badge gender-${(currentHostel.gender || "male").toLowerCase()}`}
                     >
-                      {currentHostel.gender || "Co-ed"}
+                      {currentHostel.gender || "Male"}
                     </span>
                   </div>
                   {currentHostel.amenities &&

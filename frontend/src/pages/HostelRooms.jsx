@@ -84,7 +84,6 @@ const HostelRooms = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterGender, setFilterGender] = useState("all");
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
@@ -118,12 +117,10 @@ const HostelRooms = () => {
       const matchesSearch = roomName
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-      const matchesGender =
-        filterGender === "all" || room.gender === filterGender;
 
-      return matchesSearch && matchesGender && room.availableBeds > 0;
+      return matchesSearch && room.availableBeds > 0;
     });
-  }, [filterGender, rooms, searchTerm]);
+  }, [rooms, searchTerm]);
 
   const openRoomDetail = (roomId) => {
     navigate(`/room/${roomId}/${hostelId}`);
@@ -194,6 +191,12 @@ const HostelRooms = () => {
             <div className="flex items-center gap-2 mb-6">
               <span className="material-symbols-outlined !text-[#235784]"><MapPin /></span>
               <p className="text-lg text-gray-600 font-medium mb-0">{hostel.location}</p>
+            </div>
+
+            <div className="mb-6 flex items-center gap-3">
+              <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
+                {hostel.gender || "Male"} Hostel
+              </span>
             </div>
 
             <p className="text-xl max-w-2xl mb-8">{hostel.description}</p>
@@ -274,54 +277,8 @@ const HostelRooms = () => {
 
             {/* Filters */}
             <div className="flex flex-col gap-4 mb-6">
-              <div className="flex items-center justify-between  gap-8">
+              <div className="flex items-center justify-between gap-8">
                 <h2 className="!text-[#235784] !text-2xl font-bold">Available Spaces</h2>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setFilterGender("all")}
-                    style={{ borderRadius: "9999px" }}
-                    className={`px-5 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${filterGender === "all"
-                      ? "bg-[#235784] text-white hover:opacity-95"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                      }`}
-                  >
-                    All Genders
-                  </button>
-
-                  <button
-                    onClick={() => setFilterGender("Male")}
-                    style={{ borderRadius: "9999px" }}
-                    className={`px-5 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${filterGender === "Male"
-                      ? "bg-[#235784] text-white hover:opacity-95"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                      }`}
-                  >
-                    Male
-                  </button>
-
-                  <button
-                    onClick={() => setFilterGender("Female")}
-                    style={{ borderRadius: "9999px" }}
-                    className={`px-5 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${filterGender === "Female"
-                      ? "bg-[#235784] text-white hover:opacity-95"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                      }`}
-                  >
-                    Female
-                  </button>
-
-                  <button
-                    onClick={() => setFilterGender("Co-ed")}
-                    style={{ borderRadius: "9999px" }}
-                    className={`px-5 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${filterGender === "Co-ed"
-                      ? "bg-[#235784] text-white hover:opacity-95"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                      }`}
-                  >
-                    Co-ed
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -402,6 +359,12 @@ const HostelRooms = () => {
             {/* Main White Card */}
             <div className="bg-slate-50/50 rounded-[32px] p-8 border border-slate-100 shadow-sm">
               <h2 className="!text-2xl font-bold text-black !mb-8">Location Highlights</h2>
+
+              {/* Gender Policy */}
+              <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <p className="text-sm font-semibold text-blue-900 mb-2">Gender Policy</p>
+                <p className="text-lg font-bold text-blue-700">{hostel?.gender || "Male"}</p>
+              </div>
 
               {/* Features List */}
               <div className="space-y-6 mb-8">

@@ -424,7 +424,7 @@ const RoomDetail = () => {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <span className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-xs font-bold tracking-wider uppercase">
-                  {hostel?.gender || "Co-ed"} ONLY
+                  {hostel?.gender || "Male"} ONLY
                 </span>
                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold tracking-wider flex items-center gap-1 uppercase">
                   <CheckCircle2 size={14} /> {room.availableBeds}/
@@ -608,7 +608,7 @@ const RoomDetail = () => {
 
                   <div className="p-6">
                     <p className="text-xs font-bold text-slate-500 mb-2 tracking-widest uppercase">
-                      {hostel?.gender || "Co-ed"} SHARED
+                      {hostel?.gender || "Male"} SHARED
                     </p>
                     <h3 className="text-xl font-bold text-blue-900 mb-4 leading-tight">
                       {relRoom.roomType}

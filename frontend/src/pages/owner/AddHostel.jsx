@@ -9,7 +9,7 @@ const AddHostel = ({ onSuccess }) => {
     description: "",
     amenities: "",
     rules: "",
-    gender: "Co-ed",
+    gender: "Male",
     environmentScore: 50,
     images: [],
   });
@@ -48,7 +48,7 @@ const AddHostel = ({ onSuccess }) => {
         description: "",
         amenities: "",
         rules: "",
-        gender: "Co-ed",
+        gender: "Male",
         environmentScore: 50,
         images: [],
       });
@@ -170,7 +170,6 @@ const AddHostel = ({ onSuccess }) => {
         >
           <option>Male</option>
           <option>Female</option>
-          <option>Co-ed</option>
         </select>
       </div>
 

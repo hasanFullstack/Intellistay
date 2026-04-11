@@ -48,7 +48,7 @@ export const addHostel = async (req, res) => {
       images,
       rules,
       environmentScore,
-      gender: gender || "Co-ed",
+      gender: gender || "Male",
       ownerId: req.user.id,
     });
     clearHostelCache();
