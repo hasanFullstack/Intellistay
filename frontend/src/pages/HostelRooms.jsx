@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getHostelById } from "../api/hostel.api";
 import { getRoomsByHostel } from "../api/room.api";
 import { toast } from "react-toastify";
-import { ArrowLeft, Building2, CircleCheck, MapPin, SunSnow, Wifi, Coffee, DoorClosedLocked, TowerControl, CookingPot, Users, Navigation, UtensilsCrossed, ShieldCheck, Leaf } from "lucide-react";
+import { ArrowLeft, Building2, CircleCheck, MapPin, SunSnow, Wifi, Coffee, DoorClosedLocked, TowerControl, CookingPot, Users, Navigation, UtensilsCrossed, ShieldCheck, Leaf, ChevronLeft, ChevronRight } from "lucide-react";
 import "./Rooms.css";
 import "./HostelRooms.css";
 
@@ -207,39 +207,78 @@ const HostelRooms = () => {
             <p className="text-xl max-w-2xl mb-8">{hostel.description}</p>
           </div>
 
-          {/* Images / Gallery */}
-          <div className="lg:col-span-5 grid grid-cols-2 gap-4 h-[400px] md:h-[600px]">
+          {/* Images / Gallery with Carousel */}
+          <div className="lg:col-span-5">
             {Array.isArray(hostel.images) && hostel.images.length > 0 ? (
-              <>
-                <img
-                  src={hostel.images[selectedImage]}
-                  alt={`${hostel.name} main`}
-                  className="col-span-2 rounded-xl object-cover w-full h-full"
-                />
-                {hostel.images.slice(0, 3).map((src, i) => (
+              <div className="flex flex-col gap-4">
+                {/* Main Image with Navigation */}
+                <div className="relative rounded-xl overflow-hidden bg-surface-container">
                   <img
-                    key={i}
-                    src={src}
-                    alt={`${hostel.name} ${i}`}
-                    onClick={() => setSelectedImage(i)}
-                    className={`rounded-xl object-cover w-full h-full cursor-pointer ${selectedImage === i ? 'ring-4 ring-primary/30' : ''}`}
+                    src={hostel.images[selectedImage]}
+                    alt={`${hostel.name} ${selectedImage}`}
+                    className="w-full h-96 object-contain"
                   />
-                ))}
-              </>
+
+                  {/* Left Navigation Button */}
+                  {hostel.images.length > 1 && (
+                    <button
+                      onClick={() => setSelectedImage((prev) => (prev === 0 ? hostel.images.length - 1 : prev - 1))}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-gray-50/50 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-100"
+                      aria-label="Previous image"
+                      style={{ borderRadius: "100%" }}
+                    >
+                      <ChevronLeft className="w-6 h-6 text-slate-800" />
+                    </button>
+                  )}
+
+                  {/* Right Navigation Button */}
+                  {hostel.images.length > 1 && (
+                    <button
+                      onClick={() => setSelectedImage((prev) => (prev === hostel.images.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-50/50 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-100"
+                      aria-label="Next image"
+                      style={{ borderRadius: "100%" }}
+                    >
+                      <ChevronRight className="w-6 h-6 text-slate-800" />
+                    </button>
+                  )}
+
+                  {/* Image Counter */}
+                  <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {selectedImage + 1} / {hostel.images.length}
+                  </div>
+                </div>
+
+                {/* Thumbnail Gallery */}
+                {hostel.images.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto">
+                    {hostel.images.map((src, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedImage(i)}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === i ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                      >
+                        <img src={src} alt={`${hostel.name} ${i}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : (
-              <>
-                <div className="col-span-2 rounded-xl object-cover w-full h-full bg-surface-container" />
-                <div className="rounded-xl object-cover w-full h-full bg-surface-container" />
-                <div className="rounded-xl object-cover w-full h-full bg-surface-container" />
-              </>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 rounded-xl object-cover w-full h-96 bg-surface-container" />
+                <div className="rounded-xl object-cover w-full h-20 bg-surface-container" />
+                <div className="rounded-xl object-cover w-full h-20 bg-surface-container" />
+              </div>
             )}
           </div>
         </section>
 
         {/* STATUS */}
-        <div className="mb-16 flex gap-20">
-          <div className="">
-            <section className="mb-16 flex gap-20">
+        <div className="mb-16 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="lg:col-span-2">
+            <div className="mb-16">
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-6">Status Overview</h2>
 
@@ -261,8 +300,7 @@ const HostelRooms = () => {
                   </div>
                 </div>
               </div>
-
-            </section>
+            </div>
 
             {/* AMENITIES */}
             {hostel.amenities && hostel.amenities.length > 0 && (
@@ -296,13 +334,13 @@ const HostelRooms = () => {
                     <div className="text-center max-w-md">
                       <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-2xl font-bold text-gray-800 mb-2">No Rooms Available</h3>
-                      <p className="text-gray-500 mb-6">We couldn't find any rooms matching your current filters. Try adjusting your search criteria or check back soon!</p>
+                      <p className="text-gray-500 mb-6">All rooms in this hostel are currently booked. Check back soon or explore other hostels!</p>
                       <button
-                        onClick={() => setFilterGender("all")}
+                        onClick={() => navigate("/hostels")}
                         style={{ borderRadius: '0.5rem' }}
                         className="px-6 py-3 bg-[#235784] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
                       >
-                        Reset Filters
+                        Explore Other Hostels
                       </button>
                     </div>
                   </div>
@@ -360,19 +398,14 @@ const HostelRooms = () => {
               </div>
             </section>
           </div>
-          <div className="max-w-sm mx-auto space-y-4 font-sans">
+
+          <div className="lg:col-span-1">
             {/* Main White Card */}
             <div className="bg-slate-50/50 rounded-[32px] p-8 border border-slate-100 shadow-sm">
               <h2 className="!text-2xl font-bold text-black !mb-8">Location Highlights</h2>
 
-              {/* Gender Policy */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <p className="text-sm font-semibold text-blue-900 mb-2">Gender Policy</p>
-                <p className="text-lg font-bold text-blue-700">{hostel?.gender || "Male"}</p>
-              </div>
-
               {/* Features List */}
-              <div className="space-y-6 mb-8">
+              <div className="space-y-6">
                 {generateLocationHighlights(hostel || {}).map((item, index) => (
                   <div key={index} className="flex gap-4 items-start">
                     <div className="mt-2">{item.icon}</div>
