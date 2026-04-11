@@ -7,6 +7,7 @@ import {
   updateRoom,
   deleteRoom,
   getRoomSuggestedPrice,
+  getRoomOccupants,
 } from "../controllers/room.controller.js";
 import { protect, allowRoles } from "../middleware/role.middleware.js";
 
@@ -15,6 +16,9 @@ const router = express.Router();
 // Public routes
 router.get("/", getAllRooms);
 router.get("/hostel/:hostelId", getRoomsByHostel);
+// Return current occupants for a room (requires auth)
+router.get("/:roomId/occupants", protect, getRoomOccupants);
+
 router.get("/:roomId", getRoomById);
 
 // Protected routes (Owner only)

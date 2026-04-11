@@ -30,6 +30,10 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
+    bedNumbers: {
+      type: [Number],
+      default: [],
+    },
     totalPrice: {
       type: Number,
       required: true,
@@ -42,5 +46,7 @@ const bookingSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+bookingSchema.index({ roomId: 1, status: 1, endDate: 1 });
 
 export default mongoose.model("Booking", bookingSchema);

@@ -1,6 +1,13 @@
 import Room from "../models/Room.js";
 import Hostel from "../models/Hostel.js";
+import Booking from "../models/Booking.js";
+import User from "../models/Users.js";
 import { getSuggestedPrice } from "../services/pricing.service.js";
+import {
+  calculateCompatibilityScore,
+  getMatchLabel,
+  getStrongMatches,
+} from "../utils/matchingEngine.js";
 
 export const addRoom = async (req, res) => {
   try {
@@ -136,5 +143,132 @@ export const getRoomSuggestedPrice = async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ msg: "AI service unavailable: " + err.message });
+  }
+};
+
+// Get current occupants (confirmed bookings) for a room and compatibility
+export const getRoomOccupants = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const room = await Room.findById(roomId);
+    if (!room) return res.status(404).json({ msg: "Room not found" });
+
+    const today = new Date();
+
+    // Find confirmed bookings that haven't ended yet
+    const bookings = await Booking.find({
+      roomId,
+      status: "confirmed",
+      endDate: { $gte: today },
+    }).populate("userId", "name personalityVector personalityScore");
+
+    if (!bookings || bookings.length === 0) {
+      return res.json({
+        count: 0,
+        occupants: [],
+        summary: {
+          totalOccupiedBeds: 0,
+          visibleOccupiedBeds: 0,
+          profiledOccupiedBeds: 0,
+          unprofiledOccupiedBeds: 0,
+        },
+      });
+    }
+
+    // Current viewer (must be authenticated via protect middleware)
+    const currentUser = await User.findById(req.user.id).select(
+      "personalityVector personalityScore name",
+    );
+
+    const totalOccupiedBeds = bookings.reduce(
+      (sum, b) => sum + Math.max(Number(b.bedsBooked || 0), 0),
+      0,
+    );
+
+    const visibleBookings = bookings.filter(
+      (b) => String(b.userId?._id) !== String(req.user.id),
+    );
+
+    const visibleOccupiedBeds = visibleBookings.reduce(
+      (sum, b) => sum + Math.max(Number(b.bedsBooked || 0), 0),
+      0,
+    );
+
+    // Merge bookings by student so one student appears once with aggregated beds
+    const byStudent = new Map();
+    for (const b of visibleBookings) {
+      const u = b.userId;
+      if (!u?._id) continue;
+      const key = String(u._id);
+      if (!byStudent.has(key)) {
+        byStudent.set(key, {
+          _id: u._id,
+          name: u.name,
+          personalityScore: u.personalityScore,
+          personalityVector: u.personalityVector || [],
+          bedsBooked: 0,
+          bedNumbers: [],
+        });
+      }
+      const normalizedBedsBooked = Math.max(Number(b.bedsBooked || 0), 0);
+      byStudent.get(key).bedsBooked += normalizedBedsBooked;
+
+      const incomingBedNumbers = Array.isArray(b.bedNumbers)
+        ? b.bedNumbers.filter((n) => Number.isInteger(n))
+        : [];
+      if (incomingBedNumbers.length > 0) {
+        byStudent.get(key).bedNumbers.push(...incomingBedNumbers);
+      }
+    }
+
+    const currentVector = currentUser?.personalityVector || [];
+    const occupants = [];
+    let profiledOccupiedBeds = 0;
+
+    for (const s of byStudent.values()) {
+      const occupant = {
+        _id: s._id,
+        name: s.name,
+        personalityScore: s.personalityScore,
+        bedsBooked: s.bedsBooked,
+        bedNumbers: Array.from(new Set(s.bedNumbers)).sort((a, b) => a - b),
+      };
+
+      if (currentVector.length > 0 && s.personalityVector?.length > 0) {
+        const { score, breakdown } = calculateCompatibilityScore(
+          currentVector,
+          s.personalityVector,
+        );
+        occupant.similarityScore = score;
+        occupant.matchLabel = getMatchLabel(score);
+        occupant.sharedTraits = getStrongMatches(breakdown);
+        occupant.topMatches = [...breakdown]
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3)
+          .map((d) => ({ label: d.label, score: d.score }));
+        profiledOccupiedBeds += s.bedsBooked;
+      }
+
+      occupants.push(occupant);
+    }
+
+    const unprofiledOccupiedBeds = Math.max(
+      visibleOccupiedBeds - profiledOccupiedBeds,
+      0,
+    );
+
+    res.json({
+      count: occupants.length,
+      occupants,
+      summary: {
+        totalOccupiedBeds,
+        visibleOccupiedBeds,
+        profiledOccupiedBeds,
+        unprofiledOccupiedBeds,
+      },
+    });
+  } catch (error) {
+    console.error("Error getting room occupants:", error);
+    res.status(500).json({ msg: error.message });
   }
 };
