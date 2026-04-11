@@ -1,26 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRoomById, getRoomsByHostel } from "../api/room.api";
 import { getHostelById } from "../api/hostel.api";
-import { createBooking } from "../api/booking.api";
+import { createBooking, createCheckoutSession } from "../api/booking.api";
+import { loadStripe } from "@stripe/stripe-js";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ReactPhotoSphereViewer } from "react-photo-sphere-viewer";
 import { useAuth } from "../auth/AuthContext";
 import { toast } from "react-toastify";
-import { 
-  Wifi, Car, Utensils, Wind, Shield, Tv, WashingMachine, Home, 
-  Droplets, MapPin, CheckCircle2, VolumeX, CigaretteOff 
+import {
+  Wifi,
+  Car,
+  Utensils,
+  Wind,
+  Shield,
+  Tv,
+  WashingMachine,
+  Home,
+  Droplets,
+  MapPin,
+  CheckCircle2,
+  VolumeX,
+  CigaretteOff,
 } from "lucide-react";
 
 const getAmenityIcon = (amenityStr) => {
   if (!amenityStr) return <Home size={24} />;
   const lower = amenityStr.toLowerCase();
-  if (lower.includes('wifi') || lower.includes('internet')) return <Wifi size={24} />;
-  if (lower.includes('park') || lower.includes('car')) return <Car size={24} />;
-  if (lower.includes('kitchen') || lower.includes('food')) return <Utensils size={24} />;
-  if (lower.includes('ac') || lower.includes('air')) return <Wind size={24} />;
-  if (lower.includes('secur') || lower.includes('guard') || lower.includes('cctv')) return <Shield size={24} />;
-  if (lower.includes('tv') || lower.includes('television')) return <Tv size={24} />;
-  if (lower.includes('wash') || lower.includes('laundry')) return <WashingMachine size={24} />;
-  if (lower.includes('water') || lower.includes('geyser')) return <Droplets size={24} />;
+  if (lower.includes("wifi") || lower.includes("internet"))
+    return <Wifi size={24} />;
+  if (lower.includes("park") || lower.includes("car")) return <Car size={24} />;
+  if (lower.includes("kitchen") || lower.includes("food"))
+    return <Utensils size={24} />;
+  if (lower.includes("ac") || lower.includes("air")) return <Wind size={24} />;
+  if (
+    lower.includes("secur") ||
+    lower.includes("guard") ||
+    lower.includes("cctv")
+  )
+    return <Shield size={24} />;
+  if (lower.includes("tv") || lower.includes("television"))
+    return <Tv size={24} />;
+  if (lower.includes("wash") || lower.includes("laundry"))
+    return <WashingMachine size={24} />;
+  if (lower.includes("water") || lower.includes("geyser"))
+    return <Droplets size={24} />;
   return <Home size={24} />;
 };
 
@@ -39,8 +64,17 @@ const RoomDetail = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [startCalendarOpen, setStartCalendarOpen] = useState(false);
+  const [endCalendarOpen, setEndCalendarOpen] = useState(false);
+  const [startDisplay, setStartDisplay] = useState("");
+  const [endDisplay, setEndDisplay] = useState("");
   const [bedsBooked, setBedsBooked] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const startCalRef = useRef(null);
+  const endCalRef = useRef(null);
+  const [showSphereViewer, setShowSphereViewer] = useState(false);
+  const [sphereIndex, setSphereIndex] = useState(0);
+  const [sphereImages, setSphereImages] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +88,7 @@ const RoomDetail = () => {
 
         const relatedRes = await getRoomsByHostel(hostelId);
         const filtered = relatedRes.data.filter(
-          (r) => r._id !== roomId && r.availableBeds > 0
+          (r) => r._id !== roomId && r.availableBeds > 0,
         );
         setRelatedRooms(filtered.slice(0, 3));
       } catch (err) {
@@ -69,10 +103,32 @@ const RoomDetail = () => {
     }
   }, [roomId, hostelId]);
 
+  // Close calendars when clicking outside
+  useEffect(() => {
+    const handleDocClick = (e) => {
+      if (startCalRef.current && !startCalRef.current.contains(e.target)) {
+        // if click outside start calendar and not the input
+        const startInput = document.querySelector(
+          'input[type="date"][value="' + (startDate || "") + '"]',
+        );
+        if (!startInput || !startInput.contains(e.target))
+          setStartCalendarOpen(false);
+      }
+      if (endCalRef.current && !endCalRef.current.contains(e.target)) {
+        const endInput = document.querySelectorAll('input[type="date"]')[1];
+        if (!endInput || !endInput.contains(e.target))
+          setEndCalendarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleDocClick);
+    return () => document.removeEventListener("mousedown", handleDocClick);
+  }, [startDate, endDate]);
+
   const handlePrevImage = () => {
     if (room?.images?.length) {
       setSelectedImageIndex(
-        (prev) => (prev - 1 + room.images.length) % room.images.length
+        (prev) => (prev - 1 + room.images.length) % room.images.length,
       );
     }
   };
@@ -141,30 +197,51 @@ const RoomDetail = () => {
 
     try {
       setBookingLoading(true);
-      const res = await createBooking({
+
+      // Create a Checkout Session on the server
+      const sessionRes = await createCheckoutSession({
         hostelId,
         roomId,
         startDate,
         endDate,
         bedsBooked,
+        amount: calculateTotalPrice(),
+        currency: "INR",
+        productName: `${hostel?.name || "Hostel"} — ${room?.roomType || "Room"}`,
+        productDescription: room?.description,
+        productImages:
+          room?.images && room.images.length ? [room.images[0]] : undefined,
+        // include full backend room + hostel objects so server has complete data
+        roomData: room,
+        hostelData: hostel,
       });
 
       setShowBookingModal(false);
 
-      // Navigate to success page with booking data
-      navigate("/booking-success", {
-        state: {
-          booking: {
-            ...res.data,
-            hostelName: hostel?.name,
-            hostelLocation: hostel?.location,
-            roomType: room?.roomType,
-          },
-          userRole: user?.role,
-        },
-      });
+      // If backend returns a direct URL, redirect there; otherwise use sessionId
+      const sessionUrl = sessionRes.data?.url;
+      const sessionId = sessionRes.data?.id;
+
+      if (sessionUrl) {
+        window.location.href = sessionUrl;
+        return;
+      }
+
+      if (!sessionId) {
+        throw new Error("Invalid session from server");
+      }
+
+      const stripe = await loadStripe(
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+      );
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) throw error;
     } catch (err) {
-      toast.error(err.response?.data?.msg || "Booking failed. Please try again.");
+      toast.error(
+        err.response?.data?.msg ||
+          err.message ||
+          "Booking failed. Please try again.",
+      );
     } finally {
       setBookingLoading(false);
     }
@@ -174,9 +251,43 @@ const RoomDetail = () => {
     return new Date().toISOString().split("T")[0];
   };
 
+  const formatIsoToDDMMYYYY = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const parseDDMMYYYYToIso = (s) => {
+    if (!s) return "";
+    const parts = s.split(/[\/\-\.]/);
+    if (parts.length !== 3) return "";
+    let [dd, mm, yyyy] = parts;
+    if (dd.length === 1) dd = "0" + dd;
+    if (mm.length === 1) mm = "0" + mm;
+    if (yyyy.length === 2) yyyy = `20${yyyy}`;
+    const iso = `${yyyy}-${mm}-${dd}`;
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    // ensure round-trip
+    return d.toISOString().split("T")[0];
+  };
+
+  // keep display values in sync when ISO dates change
+  useEffect(() => {
+    setStartDisplay(formatIsoToDDMMYYYY(startDate));
+  }, [startDate]);
+
+  useEffect(() => {
+    setEndDisplay(formatIsoToDDMMYYYY(endDate));
+  }, [endDate]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading room details...</p>
@@ -187,7 +298,7 @@ const RoomDetail = () => {
 
   if (!room || !hostel) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Room not found</p>
           <button
@@ -217,43 +328,91 @@ const RoomDetail = () => {
 
       <main className="pt-8 pb-16 px-6 max-w-7xl mx-auto">
         {/* Hero Gallery: Bento Style */}
-        <section className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-4 h-[500px] mb-12">
+        <section className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-4 h-125 mb-12">
           {/* Main Large Image */}
           <div className="md:col-span-2 md:row-span-2 overflow-hidden rounded-xl bg-white relative">
-            <img 
-              src={room.images?.[0] || hostel.images?.[0] || "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1200"} 
-              alt="Room View 1" 
-              className="w-full h-full object-cover" 
+            <img
+              onClick={() => {
+                const imgs = room?.images?.length
+                  ? room.images
+                  : hostel?.images || [];
+                setSphereImages(imgs);
+                setSphereIndex(0);
+                setShowSphereViewer(true);
+              }}
+              src={
+                room.images?.[0] ||
+                hostel.images?.[0] ||
+                "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1200"
+              }
+              alt="Room View 1"
+              className="w-full h-full object-cover cursor-pointer"
             />
             <div className="absolute top-4 right-4 bg-green-600 text-white px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
               <CheckCircle2 size={16} /> Verified
             </div>
           </div>
-          
+
           {/* Image 2 */}
           <div className="md:col-span-1 overflow-hidden rounded-xl bg-white">
-            <img 
-              src={room.images?.[1] || hostel.images?.[1] || "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-              alt="Room View 2" 
-              className="w-full h-full object-cover" 
+            <img
+              onClick={() => {
+                const imgs = room?.images?.length
+                  ? room.images
+                  : hostel?.images || [];
+                setSphereImages(imgs);
+                setSphereIndex(1);
+                setShowSphereViewer(true);
+              }}
+              src={
+                room.images?.[1] ||
+                hostel.images?.[1] ||
+                "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800"
+              }
+              alt="Room View 2"
+              className="w-full h-full object-cover cursor-pointer"
             />
           </div>
 
           {/* Image 3 */}
           <div className="md:col-span-1 overflow-hidden rounded-xl bg-white">
-             <img 
-              src={room.images?.[2] || hostel.images?.[2] || "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-              alt="Room View 3" 
-              className="w-full h-full object-cover" 
+            <img
+              onClick={() => {
+                const imgs = room?.images?.length
+                  ? room.images
+                  : hostel?.images || [];
+                setSphereImages(imgs);
+                setSphereIndex(2);
+                setShowSphereViewer(true);
+              }}
+              src={
+                room.images?.[2] ||
+                hostel.images?.[2] ||
+                "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800"
+              }
+              alt="Room View 3"
+              className="w-full h-full object-cover cursor-pointer"
             />
           </div>
 
           {/* Image 4 */}
           <div className="md:col-span-2 overflow-hidden rounded-xl bg-white">
-             <img 
-              src={room.images?.[3] || hostel.images?.[3] || "https://images.pexels.com/photos/275484/pexels-photo-275484.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-              alt="Room View 4" 
-              className="w-full h-full object-cover" 
+            <img
+              onClick={() => {
+                const imgs = room?.images?.length
+                  ? room.images
+                  : hostel?.images || [];
+                setSphereImages(imgs);
+                setSphereIndex(3);
+                setShowSphereViewer(true);
+              }}
+              src={
+                room.images?.[3] ||
+                hostel.images?.[3] ||
+                "https://images.pexels.com/photos/275484/pexels-photo-275484.jpeg?auto=compress&cs=tinysrgb&w=800"
+              }
+              alt="Room View 4"
+              className="w-full h-full object-cover cursor-pointer"
             />
           </div>
         </section>
@@ -268,10 +427,11 @@ const RoomDetail = () => {
                   {room.gender} ONLY
                 </span>
                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold tracking-wider flex items-center gap-1 uppercase">
-                  <CheckCircle2 size={14} /> {room.availableBeds}/{room.totalBeds} BEDS AVAILABLE
+                  <CheckCircle2 size={14} /> {room.availableBeds}/
+                  {room.totalBeds} BEDS AVAILABLE
                 </span>
               </div>
-              
+
               <h1 className="text-5xl font-extrabold text-blue-900 leading-[1.1] mb-2 tracking-tight font-headline">
                 {hostel.name}
               </h1>
@@ -282,15 +442,20 @@ const RoomDetail = () => {
 
             {/* Description */}
             <section className="border-t border-slate-200 pt-8">
-              <h2 className="text-2xl font-bold text-blue-900 mb-4 font-headline">The Space</h2>
+              <h2 className="text-2xl font-bold text-blue-900 mb-4 font-headline">
+                The Space
+              </h2>
               <p className="text-slate-600 leading-relaxed text-lg max-w-2xl whitespace-pre-line">
-                {room.description || "Experience privacy and comfort in our premium room designed for modern living. Providing ample natural light and a refreshing environment."}
+                {room.description ||
+                  "Experience privacy and comfort in our premium room designed for modern living. Providing ample natural light and a refreshing environment."}
               </p>
             </section>
 
             {/* Amenities Grid */}
             <section className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-              <h2 className="text-2xl font-bold text-blue-900 mb-6 font-headline">Premium Amenities</h2>
+              <h2 className="text-2xl font-bold text-blue-900 mb-6 font-headline">
+                Premium Amenities
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {hostel.amenities && hostel.amenities.length > 0 ? (
                   hostel.amenities.map((amenity, idx) => (
@@ -298,7 +463,9 @@ const RoomDetail = () => {
                       <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center text-blue-600">
                         {getAmenityIcon(amenity)}
                       </div>
-                      <span className="font-medium capitalize text-slate-700">{amenity}</span>
+                      <span className="font-medium capitalize text-slate-700">
+                        {amenity}
+                      </span>
                     </div>
                   ))
                 ) : (
@@ -309,7 +476,9 @@ const RoomDetail = () => {
 
             {/* House Rules */}
             <section>
-              <h2 className="text-2xl font-bold text-blue-900 mb-6 font-headline">House Rules</h2>
+              <h2 className="text-2xl font-bold text-blue-900 mb-6 font-headline">
+                House Rules
+              </h2>
               {hostel.rules ? (
                 <div className="space-y-4">
                   <p className="text-slate-600 whitespace-pre-line leading-relaxed text-lg">
@@ -321,15 +490,21 @@ const RoomDetail = () => {
                   <div className="flex items-start gap-4">
                     <VolumeX size={20} className="text-red-500 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-800">No Loudspeakers</p>
-                      <p className="text-sm text-slate-600">Quiet hours are observed after 10:00 PM.</p>
+                      <p className="font-semibold text-slate-800">
+                        No Loudspeakers
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Quiet hours are observed after 10:00 PM.
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <CigaretteOff size={20} className="text-red-500 mt-0.5" />
                     <div>
                       <p className="font-semibold text-slate-800">No Smoking</p>
-                      <p className="text-sm text-slate-600">This is strictly a smoke-free environment.</p>
+                      <p className="text-sm text-slate-600">
+                        This is strictly a smoke-free environment.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -342,37 +517,49 @@ const RoomDetail = () => {
             <div className="sticky top-28 bg-white/85 backdrop-blur-xl border border-white/20 p-8 rounded-xl shadow-2xl shadow-blue-900/10 z-10 w-full max-w-sm mx-auto">
               <div className="flex justify-between items-end mb-8">
                 <div>
-                  <span className="text-4xl font-black text-blue-900 tracking-tighter">Rs {room.pricePerBed}</span>
+                  <span className="text-4xl font-black text-blue-900 tracking-tighter">
+                    Rs {room.pricePerBed}
+                  </span>
                   <span className="text-slate-600 font-medium">/month</span>
                 </div>
               </div>
 
               <div className="space-y-4 mb-8">
                 <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="text-xs font-bold text-slate-500 mb-1 tracking-widest uppercase">ROOM TYPE</p>
-                  <p className="font-semibold text-blue-900 capitalize">{room.roomType}</p>
+                  <p className="text-xs font-bold text-slate-500 mb-1 tracking-widest uppercase">
+                    ROOM TYPE
+                  </p>
+                  <p className="font-semibold text-blue-900 capitalize">
+                    {room.roomType}
+                  </p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg flex justify-between items-center">
                   <div>
-                    <p className="text-xs font-bold text-slate-500 mb-1 tracking-widest uppercase">STAY PERIOD</p>
-                    <p className="font-semibold text-blue-900">Monthly Subscription</p>
+                    <p className="text-xs font-bold text-slate-500 mb-1 tracking-widest uppercase">
+                      STAY PERIOD
+                    </p>
+                    <p className="font-semibold text-blue-900">
+                      Monthly Subscription
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleBooking}
                 disabled={room.availableBeds === 0}
                 className={`w-full py-4 text-white font-bold rounded-lg text-lg shadow-lg hover:scale-[0.98] transition-transform ${
-                  room.availableBeds > 0 
-                  ? "bg-blue-600 shadow-blue-600/20" 
-                  : "bg-slate-400 cursor-not-allowed shadow-none"
+                  room.availableBeds > 0
+                    ? "bg-blue-600 shadow-blue-600/20"
+                    : "bg-slate-400 cursor-not-allowed shadow-none"
                 }`}
               >
                 {room.availableBeds > 0 ? "Reserve Now" : "Not Available"}
               </button>
-              
-              <p className="text-center text-xs text-slate-500 mt-4 font-medium italic">You won't be charged yet</p>
+
+              <p className="text-center text-xs text-slate-500 mt-4 font-medium italic">
+                You won't be charged yet
+              </p>
 
               <div className="mt-8 pt-8 border-t border-slate-200 space-y-4">
                 <div className="flex justify-between text-slate-600">
@@ -392,36 +579,47 @@ const RoomDetail = () => {
         {relatedRooms.length > 0 && (
           <section className="mt-24">
             <div className="flex items-baseline justify-between mb-8">
-              <h2 className="text-3xl font-extrabold text-blue-900">Related Rooms</h2>
+              <h2 className="text-3xl font-extrabold text-blue-900">
+                Related Rooms
+              </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedRooms.map((relRoom) => (
-                <div 
+                <div
                   key={relRoom._id}
                   onClick={() => navigate(`/room/${relRoom._id}/${hostelId}`)}
                   className="bg-white rounded-xl overflow-hidden shadow-md group cursor-pointer hover:shadow-xl transition-all"
                 >
                   <div className="relative h-48">
                     {relRoom.images && relRoom.images.length > 0 ? (
-                      <img 
-                        src={relRoom.images[0]} 
-                        alt="Related Room" 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      <img
+                        src={relRoom.images[0]}
+                        alt="Related Room"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                       <div className="w-full h-full bg-slate-200" />
+                      <div className="w-full h-full bg-slate-200" />
                     )}
                     <div className="absolute top-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold uppercase">
                       {relRoom.availableBeds} BEDS
                     </div>
                   </div>
-                  
+
                   <div className="p-6">
-                    <p className="text-xs font-bold text-slate-500 mb-2 tracking-widest uppercase">{relRoom.gender} SHARED</p>
-                    <h3 className="text-xl font-bold text-blue-900 mb-4 leading-tight">{relRoom.roomType}</h3>
+                    <p className="text-xs font-bold text-slate-500 mb-2 tracking-widest uppercase">
+                      {relRoom.gender} SHARED
+                    </p>
+                    <h3 className="text-xl font-bold text-blue-900 mb-4 leading-tight">
+                      {relRoom.roomType}
+                    </h3>
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-blue-900">Rs {relRoom.pricePerBed}<span className="text-sm font-normal text-slate-400">/mo</span></span>
+                      <span className="text-lg font-bold text-blue-900">
+                        Rs {relRoom.pricePerBed}
+                        <span className="text-sm font-normal text-slate-400">
+                          /mo
+                        </span>
+                      </span>
                       <button className="px-4 py-2 bg-slate-100 text-blue-800 text-sm font-bold rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
                         View Details
                       </button>
@@ -439,7 +637,10 @@ const RoomDetail = () => {
       {showBookingModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)" }}
+          style={{
+            backgroundColor: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+          }}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
@@ -448,7 +649,9 @@ const RoomDetail = () => {
             {/* Modal Header */}
             <div
               className="px-6 py-5 text-white"
-              style={{ background: "linear-gradient(135deg, #1e40af, #3b82f6)" }}
+              style={{
+                background: "linear-gradient(135deg, #1e40af, #3b82f6)",
+              }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -461,8 +664,18 @@ const RoomDetail = () => {
                   onClick={() => setShowBookingModal(false)}
                   className="text-white/80 hover:text-white transition p-1"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -476,31 +689,110 @@ const RoomDetail = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                     Check-in
                   </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    min={getTodayStr()}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50"
-                  />
+                  <div className="space-y-2 relative">
+                    <input
+                      type="text"
+                      value={startDisplay}
+                      placeholder="DD/MM/YYYY"
+                      onChange={(e) => {
+                        setStartDisplay(e.target.value);
+                        const iso = parseDDMMYYYYToIso(e.target.value);
+                        if (iso) {
+                          setStartDate(iso);
+                          // clear end if invalid
+                          if (endDate && new Date(endDate) <= new Date(iso)) {
+                            setEndDate("");
+                          }
+                        }
+                      }}
+                      onClick={() => setStartCalendarOpen(true)}
+                      onFocus={() => setStartCalendarOpen(true)}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50"
+                    />
+                    {startCalendarOpen && (
+                      <div
+                        ref={startCalRef}
+                        className="absolute left-0 mt-2 z-50 bg-white rounded-lg shadow-lg p-2"
+                      >
+                        <DatePicker
+                          inline
+                          selected={startDate ? new Date(startDate) : null}
+                          onChange={(date) => {
+                            const iso = date
+                              ? date.toISOString().split("T")[0]
+                              : "";
+                            setStartDate(iso);
+                            setStartDisplay(formatIsoToDDMMYYYY(iso));
+                            // if endDate exists and is before new start, clear it
+                            if (endDate && new Date(endDate) <= new Date(iso)) {
+                              setEndDate("");
+                              setEndDisplay("");
+                            }
+                            setStartCalendarOpen(false);
+                            setEndCalendarOpen(true);
+                          }}
+                          minDate={new Date()}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                     Check-out
                   </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate || getTodayStr()}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50"
-                  />
+                  <div className="space-y-2 relative">
+                    <input
+                      type="text"
+                      value={endDisplay}
+                      placeholder="DD/MM/YYYY"
+                      onChange={(e) => {
+                        setEndDisplay(e.target.value);
+                        const iso = parseDDMMYYYYToIso(e.target.value);
+                        if (iso) {
+                          // ensure it's after start
+                          if (
+                            startDate &&
+                            new Date(iso) <= new Date(startDate)
+                          ) {
+                            // invalid - don't set
+                          } else {
+                            setEndDate(iso);
+                          }
+                        }
+                      }}
+                      onClick={() => setEndCalendarOpen(true)}
+                      onFocus={() => setEndCalendarOpen(true)}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-gray-50"
+                    />
+                    {endCalendarOpen && (
+                      <div
+                        ref={endCalRef}
+                        className="absolute right-0 mt-2 z-50 bg-white rounded-lg shadow-lg p-2"
+                      >
+                        <DatePicker
+                          inline
+                          selected={endDate ? new Date(endDate) : null}
+                          onChange={(date) => {
+                            const iso = date
+                              ? date.toISOString().split("T")[0]
+                              : "";
+                            setEndDate(iso);
+                            setEndDisplay(formatIsoToDDMMYYYY(iso));
+                            setEndCalendarOpen(false);
+                          }}
+                          minDate={startDate ? new Date(startDate) : new Date()}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {getStayDuration() && (
                 <p className="text-sm text-gray-500 -mt-2">
-                  📅 {getStayDuration()} day{getStayDuration() > 1 ? "s" : ""} stay
+                  📅 {getStayDuration()} day{getStayDuration() > 1 ? "s" : ""}{" "}
+                  stay
                 </p>
               )}
 
@@ -512,7 +804,8 @@ const RoomDetail = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setBedsBooked(Math.max(1, bedsBooked - 1))}
-                    className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition font-bold text-lg"
+                    disabled={bedsBooked <= 1}
+                    className={`w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition font-bold text-lg ${bedsBooked <= 1 ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     −
                   </button>
@@ -520,21 +813,35 @@ const RoomDetail = () => {
                     {bedsBooked}
                   </span>
                   <button
-                    onClick={() => setBedsBooked(Math.min(room.availableBeds, bedsBooked + 1))}
-                    className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition font-bold text-lg"
+                    onClick={() =>
+                      setBedsBooked(
+                        Math.min(room.availableBeds, bedsBooked + 1),
+                      )
+                    }
+                    disabled={bedsBooked >= room.availableBeds}
+                    className={`w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition font-bold text-lg ${bedsBooked >= room.availableBeds ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     +
                   </button>
-                  <span className="text-sm text-gray-400 ml-2">
-                    of {room.availableBeds} available
-                  </span>
+                  <div className="ml-3 text-sm text-gray-600">
+                    <div>of {room.availableBeds} available</div>
+                    <div className="mt-1">
+                      Price: Rs {room.pricePerBed.toLocaleString()} / bed
+                    </div>
+                    <div className="font-semibold mt-1">
+                      Subtotal: Rs {calculateTotalPrice().toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Price Summary */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5">
+              <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-5">
                 <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
-                  <span>Rs {room.pricePerBed} × {bedsBooked} bed{bedsBooked > 1 ? "s" : ""}</span>
+                  <span>
+                    Rs {room.pricePerBed} × {bedsBooked} bed
+                    {bedsBooked > 1 ? "s" : ""}
+                  </span>
                   <span>Rs {calculateTotalPrice().toLocaleString()}</span>
                 </div>
                 <div className="border-t border-blue-200/50 pt-2 flex justify-between items-center">
@@ -557,7 +864,7 @@ const RoomDetail = () => {
               <button
                 onClick={handleSubmitBooking}
                 disabled={bookingLoading}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {bookingLoading ? (
                   <>
@@ -568,6 +875,54 @@ const RoomDetail = () => {
                   "Confirm Booking"
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PhotoSphere viewer modal showing all images as selectable 360 sources */}
+      {showSphereViewer && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(2,6,23,0.85)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSphereViewer(false);
+          }}
+        >
+          <div className="w-full max-w-5xl bg-black rounded-md overflow-hidden relative">
+            <button
+              onClick={() => setShowSphereViewer(false)}
+              className="absolute top-3 right-3 z-50 bg-white/90 text-slate-800 px-3 py-1 rounded-full font-semibold"
+            >
+              Close
+            </button>
+
+            <div className="w-full h-[72vh] bg-black">
+              <ReactPhotoSphereViewer
+                src={
+                  sphereImages && sphereImages[sphereIndex]
+                    ? sphereImages[sphereIndex]
+                    : ""
+                }
+                height="72vh"
+                width="100%"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 p-3 overflow-auto bg-black/60">
+              {(sphereImages || []).map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`sphere-thumb-${idx}`}
+                  onClick={() => setSphereIndex(idx)}
+                  className={`w-20 h-12 object-cover rounded-md cursor-pointer border-2 ${
+                    idx === sphereIndex
+                      ? "border-blue-400"
+                      : "border-transparent"
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </div>

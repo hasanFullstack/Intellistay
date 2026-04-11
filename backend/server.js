@@ -11,8 +11,14 @@ import personalityRoutes from "./routes/personality.routes.js";
 import hostelEnvironmentRoutes from "./routes/hostelEnvironment.routes.js";
 import recommendationRoutes from "./routes/recommendation.routes.js";
 import studentRoutes from "./routes/student.routes.js";
+import stripeRoutes from "./routes/stripe.routes.js";
+import paymentsRoutes from "./routes/payments.routes.js";
 
-import { securityHeaders, authLimiter, apiLimiter } from "./middleware/security.middleware.js";
+import {
+  securityHeaders,
+  authLimiter,
+  apiLimiter,
+} from "./middleware/security.middleware.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 dotenv.config();
@@ -22,16 +28,20 @@ const app = express();
 
 // Security middleware
 app.use(securityHeaders);
-app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    "http://localhost:5174", 
-    "http://localhost:5175",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174"
-  ],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+    ],
+    credentials: true,
+  }),
+);
+// Mount Stripe webhook route BEFORE JSON body parsing so we can get the raw body for signature verification
+app.use("/webhook", express.raw({ type: "application/json" }), stripeRoutes);
 app.use(express.json({ limit: "10mb" }));
 
 // Global rate limiter
@@ -46,11 +56,11 @@ app.use("/api/personality", personalityRoutes);
 app.use("/api/hostel-environment", hostelEnvironmentRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/payments", paymentsRoutes);
 
 // Global error handler (must be last)
 app.use(errorHandler);
 
-app.listen(
-  process.env.PORT,
-  () => console.log(`Server running on port ${process.env.PORT}`),
+app.listen(process.env.PORT, () =>
+  console.log(`Server running on port ${process.env.PORT}`),
 );
