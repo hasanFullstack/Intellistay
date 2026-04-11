@@ -5,7 +5,7 @@ import { getSuggestedPrice } from "../services/pricing.service.js";
 export const addRoom = async (req, res) => {
   try {
     const { hostelId } = req.params;
-    const { roomType, totalBeds, pricePerBed, gender, images, description } =
+    const { roomType, totalBeds, pricePerBed, images, description } =
       req.body;
 
     // Verify hostel exists and belongs to user
@@ -23,7 +23,6 @@ export const addRoom = async (req, res) => {
       totalBeds,
       availableBeds: totalBeds,
       pricePerBed,
-      gender: gender || "Co-ed",
       images: images || [],
       description: description || "",
     });
@@ -37,7 +36,7 @@ export const addRoom = async (req, res) => {
 export const getRoomsByHostel = async (req, res) => {
   try {
     const { hostelId } = req.params;
-    const rooms = await Room.find({ hostelId }).select({ images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, gender: 1, description: 1 });
+    const rooms = await Room.find({ hostelId }).select({ images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, description: 1 });
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ msg: error.message });
@@ -50,7 +49,7 @@ export const getAllRooms = async (req, res) => {
     // Use $slice to return only first image per room — keeps payload small but allows thumbnails
     let query = Room.find(
       {},
-      { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, gender: 1, description: 1, hostelId: 1 }
+      { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, description: 1, hostelId: 1 }
     )
       .sort({ createdAt: -1 })
       .populate('hostelId', 'name city');

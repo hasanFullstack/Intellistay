@@ -441,7 +441,7 @@ const UserDashboard = () => {
                     Gender
                   </p>
                   <p className="font-bold text-gray-900">
-                    {selectedBooking.roomId?.gender || "—"}
+                    {selectedBooking.hostelId?.gender || "—"}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl">

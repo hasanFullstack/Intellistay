@@ -39,8 +39,16 @@ const clearHostelCache = () => {
 
 export const addHostel = async (req, res) => {
   try {
+    const { name, location, description, amenities, images, rules, environmentScore, gender } = req.body;
     const hostel = await Hostel.create({
-      ...req.body,
+      name,
+      location,
+      description,
+      amenities,
+      images,
+      rules,
+      environmentScore,
+      gender: gender || "Co-ed",
       ownerId: req.user.id,
     });
     clearHostelCache();

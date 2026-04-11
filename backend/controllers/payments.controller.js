@@ -48,7 +48,8 @@ export const createCheckoutSession = async (req, res, next) => {
       if (room.totalBeds) descParts.push(`Total beds: ${room.totalBeds}`);
       if (room.availableBeds !== undefined)
         descParts.push(`Available: ${room.availableBeds}`);
-      if (room.gender) descParts.push(`Gender: ${room.gender}`);
+      const hostel = room.hostelId;
+      if (hostel && hostel.gender) descParts.push(`Gender: ${hostel.gender}`);
       const productDescription = descParts.join(" | ");
 
       line_items = [
@@ -74,7 +75,7 @@ export const createCheckoutSession = async (req, res, next) => {
         roomType: room.roomType || "",
         totalBeds: String(room.totalBeds || ""),
         availableBeds: String(room.availableBeds || ""),
-        gender: room.gender || "",
+        gender: (hostel && hostel.gender) || "",
       };
     } else if (items && items.length) {
       line_items = items.map((it) => ({

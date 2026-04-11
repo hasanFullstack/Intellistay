@@ -27,6 +27,11 @@ const hostelSchema = new mongoose.Schema(
       type: Number,
       default: 50,
     },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Co-ed"],
+      default: "Co-ed",
+    },
   },
   { timestamps: true },
 );

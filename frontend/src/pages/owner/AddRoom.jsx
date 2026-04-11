@@ -7,7 +7,6 @@ const AddRoom = ({ hostelId, onSuccess }) => {
     roomType: "Shared",
     totalBeds: 4,
     pricePerBed: 5000,
-    gender: "Co-ed",
     description: "",
     images: [],
   });
@@ -35,7 +34,6 @@ const AddRoom = ({ hostelId, onSuccess }) => {
         roomType: "Shared",
         totalBeds: 4,
         pricePerBed: 5000,
-        gender: "Co-ed",
         description: "",
         images: [],
       });
@@ -135,22 +133,6 @@ const AddRoom = ({ hostelId, onSuccess }) => {
             setData({ ...data, pricePerBed: Number(e.target.value) })
           }
         />
-      </div>
-
-      <div className="mb-3">
-        <label htmlFor="gender" className="form-label fw-semibold">
-          Gender
-        </label>
-        <select
-          id="gender"
-          className="form-select form-select-lg"
-          value={data.gender}
-          onChange={(e) => setData({ ...data, gender: e.target.value })}
-        >
-          <option>Male</option>
-          <option>Female</option>
-          <option>Co-ed</option>
-        </select>
       </div>
 
       <div className="mb-3">
