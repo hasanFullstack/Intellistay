@@ -49,18 +49,11 @@ const CheckoutPage = () => {
   const handlePay = async () => {
     try {
       setSubmitting(true);
+      // TEMP: send minimal payload to payments API (avoid images/objects)
       const sessionRes = await createCheckoutSession({
-        hostelId,
         roomId,
-        startDate,
-        endDate,
-        bedsBooked,
         amount: calculateTotalPrice(),
         currency: "INR",
-        productName: `${hostel?.name || "Hostel"} — ${room?.roomType || "Room"}`,
-        productDescription: room?.description,
-        productImages:
-          room?.images && room.images.length ? [room.images[0]] : undefined,
       });
 
       const sessionUrl = sessionRes.data?.url;

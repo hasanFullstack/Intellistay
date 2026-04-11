@@ -198,22 +198,11 @@ const RoomDetail = () => {
     try {
       setBookingLoading(true);
 
-      // Create a Checkout Session on the server
+      // TEMP: send minimal payload to isolate server error (no images/objects)
       const sessionRes = await createCheckoutSession({
-        hostelId,
         roomId,
-        startDate,
-        endDate,
-        bedsBooked,
         amount: calculateTotalPrice(),
-        currency: "INR",
-        productName: `${hostel?.name || "Hostel"} — ${room?.roomType || "Room"}`,
-        productDescription: room?.description,
-        productImages:
-          room?.images && room.images.length ? [room.images[0]] : undefined,
-        // include full backend room + hostel objects so server has complete data
-        roomData: room,
-        hostelData: hostel,
+        currency: "PKR",
       });
 
       setShowBookingModal(false);
