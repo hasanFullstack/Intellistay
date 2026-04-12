@@ -3,7 +3,6 @@ import { getUserBookings, cancelBooking } from "../../api/booking.api";
 import { useAuth } from "../../auth/AuthContext";
 import { toast } from "react-toastify";
 import RecommendedHostels from "./RecommendedHostels";
-import SimilarStudents from "./SimilarStudents";
 import {
   Calendar,
   MapPin,
@@ -146,17 +145,13 @@ const UserDashboard = () => {
             <div className="bg-white rounded-xl p-8 shadow">
               <div className="flex flex-col items-center text-center">
                 <img
-                  src={user?.avatar || "https://via.placeholder.com/96"}
+                  src={user?.avatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuZSe6bTFXTqCZAoTuOwjXK6Z_R4w-fUP4lQ&s"}
                   alt="Profile"
                   className="w-24 h-24 rounded-full object-cover mb-4"
                 />
 
                 <h1 className="text-xl font-bold text-gray-900">{user?.name || "User"}</h1>
                 <p className="text-gray-500 text-sm">{user?.universityName || "Student"}</p>
-
-                <button className="mt-6 w-full bg-[#2b5a84] text-white py-2 rounded-lg font-semibold hover:bg-[#1D4E89] transition">
-                  Edit Profile
-                </button>
               </div>
             </div>
 
@@ -195,12 +190,12 @@ const UserDashboard = () => {
               {[
                 { key: "bookings", label: "My Bookings", emoji: "📚" },
                 { key: "recommendations", label: "Recommended", emoji: "🏠" },
-                { key: "similar", label: "Similar Students", emoji: "👥" },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                  style={{ borderRadius: "0.5rem" }}
+                  className={`px-4 py-2.5 text-sm font-semibold transition-all ${
                     activeTab === tab.key
                       ? "bg-[#2b5a84] text-white"
                       : "text-gray-600 hover:text-gray-900"

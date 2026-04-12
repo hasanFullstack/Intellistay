@@ -8,6 +8,8 @@ import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
 import { toast } from "react-toastify";
 import { FaMale, FaFemale } from "react-icons/fa";
+import { Heart } from "lucide-react";
+import { useFavorites } from "../hooks/useFavorites";
 
 const HOSTELS_CACHE_KEY = "intellistay.hostels.all.v2";
 const HOSTELS_FILTERS_CACHE_KEY = "intellistay.hostels.filters.v2";
@@ -82,6 +84,7 @@ const Hostels = () => {
   const [selectedFilter, setSelectedFilter] = useState("All Hostels");
   const [filterGender, setFilterGender] = useState("all");
   const { user } = useAuth();
+  const { isFavorited, toggleFavorite } = useFavorites();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // Reduced from 8 for faster initial render
@@ -595,7 +598,7 @@ const Hostels = () => {
               {paginatedHostels.map((hostel) => (
                 <div key={hostel._id} className="hostel-card">
                   {/* Featured Image */}
-                  <div className="card-image-section">
+                  <div className="card-image-section relative">
                     <img
                       src={(hostel.images && hostel.images.length > 0)
                         ? hostel.images[0]
@@ -603,6 +606,24 @@ const Hostels = () => {
                       alt={hostel.name}
                       className="card-featured-image"
                     />
+                    {/* Favorite Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(hostel._id);
+                      }}
+                      className="absolute top-3 right-3 backdrop-blur-md p-1.5 text-white hover:bg-white hover:text-red-500 transition-all duration-200"
+                      style={{
+                        borderRadius: "0.375rem",
+                        backgroundColor: isFavorited(hostel._id) ? "rgba(239, 68, 68, 0.8)" : "rgba(255, 255, 255, 0.2)"
+                      }}
+                    >
+                      <Heart
+                        size={18}
+                        fill={isFavorited(hostel._id) ? "currentColor" : "none"}
+                        color="white"
+                      />
+                    </button>
                   </div>
 
                   {/* Card Header */}

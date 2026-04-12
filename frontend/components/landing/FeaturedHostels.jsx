@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Heart, ChevronDown } from "lucide-react";
 import { getAllHostels } from "../../src/api/hostel.api";
 import { getRoomsByHostel } from "../../src/api/room.api";
+import { useFavorites } from "../../src/hooks/useFavorites";
 
 const SEATER_OPTIONS = ["Any Seater", "Single", "2 Seater", "4 Seater"];
 
@@ -19,6 +20,7 @@ const selectedSeaterToBedCount = (selectedSeater) => {
 
 const FeaturedHostels = () => {
   const navigate = useNavigate();
+  const { isFavorited, toggleFavorite } = useFavorites();
   const [activeFilters, setActiveFilters] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("Any Location");
@@ -360,8 +362,22 @@ const FeaturedHostels = () => {
                     </div>
 
                     {/* Heart Icon */}
-                    <button className="absolute top-3 right-3 bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white hover:bg-white hover:text-red-500 transition-colors">
-                      <Heart size={18} />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(hostel._id);
+                      }}
+                      className="absolute top-3 right-3 backdrop-blur-md p-1.5 text-white hover:bg-white hover:text-red-500 transition-all duration-200"
+                      style={{
+                        borderRadius: "0.375rem",
+                        backgroundColor: isFavorited(hostel._id) ? "rgba(239, 68, 68, 0.8)" : "rgba(0, 0, 0, 0.2)"
+                      }}
+                    >
+                      <Heart 
+                        size={18} 
+                        fill={isFavorited(hostel._id) ? "currentColor" : "none"}
+                        color="white"
+                      />
                     </button>
                   </div>
 
