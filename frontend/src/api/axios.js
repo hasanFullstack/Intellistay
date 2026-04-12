@@ -17,7 +17,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-    const message = error.response?.data?.message || "Something went wrong";
+    // Normalize backend error shapes: some controllers return { msg: '...' }
+    const message =
+      error.response?.data?.message || error.response?.data?.msg || "Something went wrong";
+
+    // Ensure downstream code that expects `data.message` sees a value
+    if (error.response?.data && !error.response.data.message && error.response.data.msg) {
+      error.response.data.message = error.response.data.msg;
+    }
 
     // Auto logout on 401 (expired/invalid token)
     if (status === 401) {
@@ -38,7 +45,7 @@ api.interceptors.response.use(
 
     // Server error
     if (status >= 500) {
-      toast.error("Server error. Please try again later.");
+      toast.error(message || "Server error. Please try again later.");
     }
 
     return Promise.reject(error);
