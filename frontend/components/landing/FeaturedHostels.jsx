@@ -206,7 +206,7 @@ const FeaturedHostels = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
-      
+
 
       {/* Main Search Container */}
       <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-12">
@@ -366,19 +366,27 @@ const FeaturedHostels = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
+                  <div className="bg-[#235784] flex items-center text-white text-xs px-2 py-2 ">
+                    <h3 className="text-lg mb-0 font-semibold text-gray-800 line-clamp-1 capitalize">
                       {hostel?.name || "Untitled Hostel"}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-                      {hostel?.city && hostel?.addressLine1
-                        ? `${hostel.addressLine1}, ${hostel.city}`
-                        : "Address not set"}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-2 line-clamp-2 min-h-[40px]">
-                      {hostel?.description ||
-                        "Comfortable stay with good facilities and a peaceful environment."}
-                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className=" flex gap-2">
+                      <i className="bi bi-geo-alt-fill text-[#235784]"></i>
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-1">
+                        {hostel?.city && hostel?.addressLine1
+                          ? `${hostel.addressLine1}, ${hostel.city}`
+                          : "Address not set"}
+                      </p>
+                    </div>
+                    <div className=" flex gap-2">
+                      <i className="bi bi-shield-check text-[#235784]"></i>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {hostel?.rules ||
+                          "Comfortable stay with good facilities and a peaceful environment."}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
