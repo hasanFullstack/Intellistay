@@ -10,6 +10,8 @@ import { toast } from "react-toastify";
 import { FaMale, FaFemale } from "react-icons/fa";
 
 const HOSTELS_CACHE_KEY = "intellistay.hostels.all.v2";
+const HOSTELS_FILTERS_CACHE_KEY = "intellistay.hostels.filters.v2";
+const CACHE_EXPIRY_TIME = 30 * 60 * 1000; // 30 minutes
 
 const readCachedHostels = () => {
   try {
@@ -31,6 +33,46 @@ const writeCachedHostels = (data) => {
   }
 };
 
+const readCachedFilterHostels = (filterType) => {
+  try {
+    const rawCache = sessionStorage.getItem(HOSTELS_FILTERS_CACHE_KEY);
+    if (!rawCache) return null;
+
+    const cache = JSON.parse(rawCache);
+    const filterCache = cache[filterType];
+    
+    if (!filterCache) return null;
+    
+    // Check if cache has expired
+    if (Date.now() - filterCache.timestamp > CACHE_EXPIRY_TIME) {
+      return null;
+    }
+    
+    return filterCache.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedFilterHostels = (filterType, data) => {
+  try {
+    let cache = {};
+    const rawCache = sessionStorage.getItem(HOSTELS_FILTERS_CACHE_KEY);
+    if (rawCache) {
+      cache = JSON.parse(rawCache);
+    }
+    
+    cache[filterType] = {
+      data: data,
+      timestamp: Date.now()
+    };
+    
+    sessionStorage.setItem(HOSTELS_FILTERS_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Ignore cache write issues quietly.
+  }
+};
+
 const Hostels = () => {
   const navigate = useNavigate();
   const [hostels, setHostels] = useState([]);
@@ -42,12 +84,19 @@ const Hostels = () => {
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 6; // Reduced from 8 for faster initial render
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadHostels();
   }, []);
+
+  useEffect(() => {
+    // Prefetch all filter data when user role is student
+    if (user?.role === "student") {
+      prefetchAllFilters();
+    }
+  }, [user?.role]);
 
   const loadHostels = async () => {
     const cachedHostels = readCachedHostels();
@@ -73,6 +122,31 @@ const Hostels = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const prefetchAllFilters = async () => {
+    // Fetch ALL filters in parallel at once and cache them
+    const filterTypes = ["available", "recommended", "popular", "budget"];
+    
+    // Create promises for all filters (fetch in parallel, not sequential)
+    const fetchPromises = filterTypes.map(async (filterType) => {
+      // Skip if already cached
+      if (readCachedFilterHostels(filterType)) {
+        return;
+      }
+      
+      try {
+        const res = await getAllHostels(filterType);
+        const data = res.data || [];
+        writeCachedFilterHostels(filterType, data);
+        console.log(`Cached ${filterType} filter: ${data.length} hostels`);
+      } catch (err) {
+        console.log(`Prefetch failed for ${filterType}:`, err.message);
+      }
+    });
+    
+    // Wait for all filters to be fetched and cached
+    await Promise.all(fetchPromises);
   };
 
   const handleSearch = (value) => {
@@ -110,19 +184,45 @@ const Hostels = () => {
       return;
     }
 
-    // For other filters, ask the backend (backend enforces student role)
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await getAllHostels(value);
-        const data = res.data || [];
-        applyFilters(data, value, searchTerm, filterGender);
-      } catch (err) {
-        toast.error("Filter request failed");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    // Check cache first for other filters
+    const cachedData = readCachedFilterHostels(value);
+    if (cachedData && cachedData.length > 0) {
+      // IMMEDIATELY show cached data without loading state
+      applyFilters(cachedData, value, searchTerm, filterGender);
+      
+      // Silently fetch fresh data in background (does NOT set loading state)
+      (async () => {
+        try {
+          const res = await getAllHostels(value);
+          const data = res.data || [];
+          if (data && data.length > 0) {
+            writeCachedFilterHostels(value, data);
+            // Update UI with fresh data
+            applyFilters(data, value, searchTerm, filterGender);
+          }
+        } catch (err) {
+          // Keep showing cached data if refresh fails
+          console.log(`Failed to refresh ${value} filter:`, err.message);
+        }
+      })();
+    } else {
+      // No cache available, show loading state while fetching
+      setLoading(true);
+      (async () => {
+        try {
+          const res = await getAllHostels(value);
+          const data = res.data || [];
+          writeCachedFilterHostels(value, data);
+          applyFilters(data, value, searchTerm, filterGender);
+        } catch (err) {
+          toast.error("Failed to load filter");
+          // Fallback to All Hostels on error
+          applyFilters(hostels, "All Hostels", searchTerm, filterGender);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
   };
 
   const handleGenderFilter = (gender) => {
@@ -185,12 +285,24 @@ const Hostels = () => {
 
         {loading ? (
           <div className="hostels-container">
-            <div className="flex results-info justify-between items-center gap-4">
-              <p>
-                Showing <strong>{filteredHostels.length}</strong> hostel
-                {filteredHostels.length !== 1 ? "s" : ""}
-              </p>
-              <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex results-info flex-col gap-4">
+              <div className="flex justify-between">
+                <div className="flex gap-2 items-center">
+                  <p>
+                    Showing <strong>{filteredHostels.length}</strong> hostel
+                    {filteredHostels.length !== 1 ? "s" : ""}
+                  </p>
+                  {user?.role === "student" && (
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap text-[#235784] focus:outline-none`}
+                    >
+                      <i className="bi bi-funnel me-2"></i>
+                      Filter
+                    </button>
+                  )}
+                </div>
                 <Select
                   value={filterGender}
                   onChange={handleGenderFilter}
@@ -201,109 +313,9 @@ const Hostels = () => {
                     { label: "Female", value: "Female" },
                   ]}
                 />
+              </div>
+              <div className="flex items-center gap-4 flex-wrap">
                 {user?.role === "student" && (
-                  <>
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${showFilters
-                        ? "bg-[#235784] text-white hover:opacity-95"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                        }`}
-                    >
-                      <i className="bi bi-funnel me-2"></i>
-                      Filter
-                    </button>
-                    <div
-                      style={{
-                        maxHeight: showFilters ? "500px" : "0",
-                        overflow: "hidden",
-                        transition: "max-height 0.3s ease-in-out",
-                      }}
-                      className="flex items-center gap-2 flex-wrap"
-                    >
-                      <button
-                        onClick={() => handleFilterChange("All Hostels")}
-                        style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "All Hostels"
-                          ? "bg-[#235784] text-white hover:opacity-95"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                          }`}
-                      >
-                        All Hostels
-                      </button>
-                      <button
-                        onClick={() => handleFilterChange("available")}
-                        style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "available"
-                          ? "bg-[#235784] text-white hover:opacity-95"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                          }`}
-                      >
-                        Available Now
-                      </button>
-                      <button
-                        onClick={() => handleFilterChange("recommended")}
-                        style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "recommended"
-                          ? "bg-[#235784] text-white hover:opacity-95"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                          }`}
-                      >
-                        Recommended
-                      </button>
-                      <button
-                        onClick={() => handleFilterChange("popular")}
-                        style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "popular"
-                          ? "bg-[#235784] text-white hover:opacity-95"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                          }`}
-                      >
-                        Most Popular
-                      </button>
-                      <button
-                        onClick={() => handleFilterChange("budget")}
-                        style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "budget"
-                          ? "bg-[#235784] text-white hover:opacity-95"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                          }`}
-                      >
-                        Budget Friendly
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="loading-container">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-3">Loading hostels...</p>
-            </div>
-          </div>
-        ) : filteredHostels.length === 0 ? (
-          <div className="hostels-container">
-            <div className="flex results-info justify-between items-center gap-4">
-              <p>
-                Showing <strong>{filteredHostels.length}</strong> hostel
-                {filteredHostels.length !== 1 ? "s" : ""}
-              </p>
-              {user?.role === "student" && (
-                <>
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    style={{ borderRadius: "9999px" }}
-                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${showFilters
-                      ? "bg-[#235784] text-white hover:opacity-95"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-300"
-                      }`}
-                  >
-                    <i className="bi bi-funnel me-2"></i>
-                    Filter
-                  </button>
                   <div
                     style={{
                       maxHeight: showFilters ? "500px" : "0",
@@ -363,9 +375,36 @@ const Hostels = () => {
                       Budget Friendly
                     </button>
                   </div>
-                </>
-              )}
-              <div className="flex items-center gap-4 flex-wrap">
+                )}
+              </div>
+            </div>
+            <div className="loading-container">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3">Loading hostels...</p>
+            </div>
+          </div>
+        ) : filteredHostels.length === 0 ? (
+          <div className="hostels-container">
+            <div className="flex results-info flex-col gap-4">
+              <div className="flex justify-between">
+                <div className="flex gap-2 items-center">
+                  <p>
+                    Showing <strong>{filteredHostels.length}</strong> hostel
+                    {filteredHostels.length !== 1 ? "s" : ""}
+                  </p>
+                  {user?.role === "student" && (
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap text-[#235784] focus:outline-none`}
+                    >
+                      <i className="bi bi-funnel me-2"></i>
+                      Filter
+                    </button>
+                  )}
+                </div>
                 <Select
                   value={filterGender}
                   onChange={handleGenderFilter}
@@ -376,7 +415,69 @@ const Hostels = () => {
                     { label: "Female", value: "Female" },
                   ]}
                 />
-
+              </div>
+              <div className="flex items-center gap-4 flex-wrap">
+                {user?.role === "student" && (
+                  <div
+                    style={{
+                      maxHeight: showFilters ? "500px" : "0",
+                      overflow: "hidden",
+                      transition: "max-height 0.3s ease-in-out",
+                    }}
+                    className="flex items-center gap-2 flex-wrap"
+                  >
+                    <button
+                      onClick={() => handleFilterChange("All Hostels")}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "All Hostels"
+                        ? "bg-[#235784] text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                        }`}
+                    >
+                      All Hostels
+                    </button>
+                    <button
+                      onClick={() => handleFilterChange("available")}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "available"
+                        ? "bg-[#235784] text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                        }`}
+                    >
+                      Available Now
+                    </button>
+                    <button
+                      onClick={() => handleFilterChange("recommended")}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "recommended"
+                        ? "bg-[#235784] text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                        }`}
+                    >
+                      Recommended
+                    </button>
+                    <button
+                      onClick={() => handleFilterChange("popular")}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "popular"
+                        ? "bg-[#235784] text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                        }`}
+                    >
+                      Most Popular
+                    </button>
+                    <button
+                      onClick={() => handleFilterChange("budget")}
+                      style={{ borderRadius: "9999px" }}
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "budget"
+                        ? "bg-[#235784] text-white hover:opacity-95"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-300"
+                        }`}
+                    >
+                      Budget Friendly
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="empty-state">

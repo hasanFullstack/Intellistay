@@ -77,6 +77,9 @@ export const addHostel = async (req, res) => {
 export const getAllHostels = async (req, res) => {
   try {
     const filter = req.query.filter;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50; // Default 50 per page
+    const skip = (page - 1) * limit;
 
     // If no filter or explicit all, return all hostels (unchanged behavior)
     if (!filter || filter === "All Hostels") {
@@ -89,6 +92,8 @@ export const getAllHostels = async (req, res) => {
       const hostels = await Hostel.find()
         .select({ images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 })
         .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
         .lean();
       setCachedHostelData("hostels:all", hostels);
       return res.json(hostels);
@@ -118,52 +123,28 @@ export const getAllHostels = async (req, res) => {
       });
       const hostels = await Hostel.find({ _id: { $in: hostelIds } })
         .select({ images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 })
+        .limit(limit)
+        .skip(skip)
         .lean();
       setCachedHostelData("hostels:available", hostels);
       return res.json(hostels);
     }
 
-    // MOST POPULAR: sort by bookingCount desc, fallback to viewCount
+    // MOST POPULAR: sort by viewCount (much faster than aggregation)
     if (f === "most popular" || f === "popular") {
       const cachedHostels = getCachedHostelData("hostels:popular");
       if (cachedHostels) {
         return res.json(cachedHostels);
       }
 
-      const agg = await Booking.aggregate([
-        { $group: { _id: "$hostelId", bookingCount: { $sum: 1 } } },
-        { $sort: { bookingCount: -1 } },
-      ]);
-
-      const orderedIds = agg.map((a) => String(a._id));
-
-      const orderedHostels = await Hostel.find({
-        _id: { $in: orderedIds },
-      })
+      // Optimized: sort by viewCount directly instead of aggregating bookings
+      const popularHostels = await Hostel.find()
         .select({ images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 })
+        .sort({ viewCount: -1, createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
         .lean();
-      const map = new Map(orderedHostels.map((h) => [String(h._id), h]));
 
-      // Attach bookingCount as popularityScore
-      const sortedByBookings = agg
-        .map((a) => {
-          const h = map.get(String(a._id));
-          if (!h) return null;
-          return { ...h, popularityScore: a.bookingCount };
-        })
-        .filter(Boolean);
-
-      // Remaining hostels: return with popularityScore = 0, sorted by viewCount
-      const remaining = await Hostel.find({ _id: { $nin: orderedIds } })
-        .select({ images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 })
-        .sort({ viewCount: -1 })
-        .lean();
-      const remainingWithScore = remaining.map((h) => ({
-        ...h,
-        popularityScore: 0,
-      }));
-
-      const popularHostels = [...sortedByBookings, ...remainingWithScore];
       setCachedHostelData("hostels:popular", popularHostels);
       return res.json(popularHostels);
     }
@@ -178,12 +159,17 @@ export const getAllHostels = async (req, res) => {
         ? req.user.personalityVector
         : [];
 
+      // Optimize: only fetch needed fields and limit initial fetch
       const envs = await HostelEnvironment.find({
         profileCompleted: true,
-      }).populate({
-        path: "hostelId",
-        select: { images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 }
-      });
+      })
+        .select("hostelId hostelVector")
+        .populate({
+          path: "hostelId",
+          select: { images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 }
+        })
+        .lean()
+        .limit(1000); // Limit to top 1000 for calculation
 
       const results = envs
         .filter((env) => env.hostelId)
@@ -191,13 +177,14 @@ export const getAllHostels = async (req, res) => {
           const hostelVector =
             env && Array.isArray(env.hostelVector) ? env.hostelVector : [];
           const { score } = calculateCompatibilityScore(userVector, hostelVector);
-          const hostel = env.hostelId.toObject ? env.hostelId.toObject() : env.hostelId;
+          const hostel = env.hostelId;
           return { ...hostel, similarityScore: score };
         })
         .filter((h) => h.similarityScore > 0)
         .sort(
           (a, b) => (b.similarityScore || 0) - (a.similarityScore || 0),
-        );
+        )
+        .slice(skip, skip + limit); // Apply pagination after sorting
 
       return res.json(results);
     }
@@ -206,12 +193,17 @@ export const getAllHostels = async (req, res) => {
     if (f === "budget optimized" || f === "budget") {
       const userVector = req.user.personalityVector || [];
 
+      // Optimize: limit initial fetch
       const envs = await HostelEnvironment.find({
         profileCompleted: true,
-      }).populate({
-        path: "hostelId",
-        select: { images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 }
-      });
+      })
+        .select("hostelId hostelVector")
+        .populate({
+          path: "hostelId",
+          select: { images: { $slice: 1 }, name: 1, addressLine1: 1, addressLine2: 1, city: 1, description: 1, amenities: 1, rules: 1, environmentScore: 1, gender: 1, viewCount: 1, createdAt: 1 }
+        })
+        .lean()
+        .limit(1000); // Limit to top 1000 for calculation
 
       const hostelIds = envs
         .map((env) => env.hostelId?._id)
@@ -257,12 +249,20 @@ export const getAllHostels = async (req, res) => {
 
       results.sort((a, b) => b.finalScore - a.finalScore);
 
-      const sortedHostels = results.map((r) => r.hostel);
-      return res.json(sortedHostels);
+      // Apply pagination
+      const paginatedResults = results
+        .slice(skip, skip + limit)
+        .map((r) => r.hostel);
+      
+      return res.json(paginatedResults);
     }
 
-    // Unknown filter - fallback to returning all
-    const hostels = await Hostel.find().select(HOSTEL_LIST_FIELDS).lean();
+    // Unknown filter - fallback to returning all with pagination
+    const hostels = await Hostel.find()
+      .select(HOSTEL_LIST_FIELDS)
+      .limit(limit)
+      .skip(skip)
+      .lean();
     return res.json(hostels);
   } catch (error) {
     res.status(500).json({ msg: error.message });
