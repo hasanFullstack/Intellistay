@@ -2,6 +2,7 @@ import Room from "../models/Room.js";
 import Hostel from "../models/Hostel.js";
 import Booking from "../models/Booking.js";
 import User from "../models/Users.js";
+import mongoose from "mongoose";
 import { getSuggestedPrice } from "../services/pricing.service.js";
 import {
   calculateCompatibilityScore,
@@ -52,17 +53,170 @@ export const getRoomsByHostel = async (req, res) => {
 
 export const getAllRooms = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit, 10) || 0;
-    // Use $slice to return only first image per room — keeps payload small but allows thumbnails
-    let query = Room.find(
-      {},
-      { images: { $slice: 1 }, roomType: 1, totalBeds: 1, availableBeds: 1, pricePerBed: 1, description: 1, hostelId: 1 }
-    )
-      .sort({ createdAt: -1 })
-      .populate('hostelId', 'name city addressLine1 addressLine2 city gender');
-    if (limit > 0) query = query.limit(limit);
-    const rooms = await query.lean();
-    res.json(rooms);
+    const hasAdvancedFilters = [
+      "page",
+      "hostelId",
+      "search",
+      "minPrice",
+      "maxPrice",
+      "minBeds",
+      "maxBeds",
+      "gender",
+      "amenities",
+      "roommateMode",
+      "availableOnly",
+    ].some((key) => Object.prototype.hasOwnProperty.call(req.query, key));
+
+    // Backward-compatible response for existing consumers (array)
+    if (!hasAdvancedFilters) {
+      const limit = parseInt(req.query.limit, 10) || 0;
+      let query = Room.find(
+        {},
+        {
+          images: { $slice: 1 },
+          roomType: 1,
+          totalBeds: 1,
+          availableBeds: 1,
+          pricePerBed: 1,
+          description: 1,
+          hostelId: 1,
+        },
+      )
+        .sort({ createdAt: -1 })
+        .populate("hostelId", "name city addressLine1 addressLine2 city gender amenities");
+      if (limit > 0) query = query.limit(limit);
+      const rooms = await query.lean();
+      return res.json(rooms);
+    }
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 48);
+
+    const search = (req.query.search || "").trim();
+    const hostelId = (req.query.hostelId || "").trim();
+    const gender = (req.query.gender || "all").trim();
+    const roommateMode = (req.query.roommateMode || "all").trim();
+    const availableOnly = String(req.query.availableOnly || "true") === "true";
+
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+    const minBeds = Number(req.query.minBeds);
+    const maxBeds = Number(req.query.maxBeds);
+
+    const amenities = String(req.query.amenities || "")
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
+
+    const match = {};
+
+    if (hostelId) {
+      if (!mongoose.Types.ObjectId.isValid(hostelId)) {
+        return res.status(400).json({ msg: "Invalid hostelId" });
+      }
+      match.hostelId = new mongoose.Types.ObjectId(hostelId);
+    }
+
+    if (availableOnly) {
+      match.availableBeds = { $gt: 0 };
+    }
+
+    if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+      match.pricePerBed = {};
+      if (Number.isFinite(minPrice)) match.pricePerBed.$gte = minPrice;
+      if (Number.isFinite(maxPrice)) match.pricePerBed.$lte = maxPrice;
+    }
+
+    if (Number.isFinite(minBeds) || Number.isFinite(maxBeds)) {
+      match.totalBeds = {};
+      if (Number.isFinite(minBeds)) match.totalBeds.$gte = minBeds;
+      if (Number.isFinite(maxBeds)) match.totalBeds.$lte = maxBeds;
+    }
+
+    if (roommateMode === "shared-only") {
+      match.roomType = { $ne: "Single" };
+    }
+
+    const pipeline = [
+      { $match: match },
+      {
+        $lookup: {
+          from: "hostels",
+          localField: "hostelId",
+          foreignField: "_id",
+          as: "hostel",
+        },
+      },
+      { $unwind: "$hostel" },
+    ];
+
+    const joinedMatch = {};
+
+    if (gender && gender.toLowerCase() !== "all") {
+      joinedMatch["hostel.gender"] = { $regex: `^${gender}$`, $options: "i" };
+    }
+
+    if (amenities.length > 0) {
+      joinedMatch["hostel.amenities"] = { $all: amenities };
+    }
+
+    if (search) {
+      joinedMatch.$or = [
+        { roomType: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { "hostel.name": { $regex: search, $options: "i" } },
+        { "hostel.city": { $regex: search, $options: "i" } },
+        { "hostel.addressLine1": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (Object.keys(joinedMatch).length > 0) {
+      pipeline.push({ $match: joinedMatch });
+    }
+
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          roomType: 1,
+          totalBeds: 1,
+          availableBeds: 1,
+          pricePerBed: 1,
+          description: 1,
+          images: { $slice: ["$images", 1] },
+          hostelId: {
+            _id: "$hostel._id",
+            name: "$hostel.name",
+            city: "$hostel.city",
+            addressLine1: "$hostel.addressLine1",
+            addressLine2: "$hostel.addressLine2",
+            gender: "$hostel.gender",
+            amenities: "$hostel.amenities",
+          },
+          createdAt: 1,
+        },
+      },
+      {
+        $facet: {
+          data: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+          totalCount: [{ $count: "count" }],
+        },
+      },
+    );
+
+    const result = await Room.aggregate(pipeline);
+    const data = result?.[0]?.data || [];
+    const total = result?.[0]?.totalCount?.[0]?.count || 0;
+
+    res.json({
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1),
+      },
+    });
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
