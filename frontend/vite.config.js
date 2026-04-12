@@ -10,4 +10,13 @@ export default defineConfig({
   ssr: {
     noExternal: ["react-photo-sphere-viewer", "@photo-sphere-viewer/core"],
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });
