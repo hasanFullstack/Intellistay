@@ -15,6 +15,7 @@ import studentRoutes from "./routes/student.routes.js";
 import stripeRoutes from "./routes/stripe.routes.js";
 import paymentsRoutes from "./routes/payments.routes.js";
 import favoriteRoutes from "./routes/favorite.routes.js";
+import ownerStripeRoutes from "./routes/ownerStripe.routes.js";
 
 import {
   securityHeaders,
@@ -61,6 +62,7 @@ app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/owners/stripe", ownerStripeRoutes);
 
 // Global error handler (must be last)
 app.use(errorHandler);
