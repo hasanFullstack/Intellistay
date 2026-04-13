@@ -288,7 +288,7 @@ const Hostels = () => {
 
         {loading ? (
           <div className="hostels-container">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 mb-4">
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex gap-2 items-center justify-between">
                   <p className="mb-0">
@@ -390,7 +390,7 @@ const Hostels = () => {
           </div>
         ) : filteredHostels.length === 0 ? (
           <div className="hostels-container">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 mb-4">
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex gap-2 items-center justify-between">
                   <p className="mb-0">
@@ -495,7 +495,7 @@ const Hostels = () => {
           </div>
         ) : (
           <div className="hostels-container">
-            <div className="flex flex-col results-info gap-4">
+            <div className="flex flex-col gap-4 mb-4">
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div className="flex gap-2 items-center justify-between">
                   <p className="mb-0">
@@ -594,7 +594,7 @@ const Hostels = () => {
               </div>
             </div>
 
-            <div className="hostels-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="hostels-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginatedHostels.map((hostel) => (
                 <div key={hostel._id} className="hostel-card">
                   {/* Featured Image */}
