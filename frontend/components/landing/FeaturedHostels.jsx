@@ -213,9 +213,9 @@ const FeaturedHostels = () => {
       {/* Main Search Container */}
       <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-12">
         {/* Top Search Bar */}
-        <div className="p-4 border-b flex flex-wrap items-center gap-4">
-          <div className="flex-[2] min-w-[300px] relative self-end">
-            <div className="flex items-center border rounded px-3 py-2 bg-white">
+        <div className="p-4 border-b flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-[2] relative">
+            <div className="flex border w-full rounded px-3 py-2 bg-white">
               <Search size={18} className="text-gray-400 mr-2" />
               <input
                 type="text"
@@ -231,7 +231,7 @@ const FeaturedHostels = () => {
             type="button"
             onClick={runSearch}
             style={{ backgroundColor: primaryColor }}
-            className="px-8 py-2.5 rounded text-white font-semibold self-end transition-opacity hover:opacity-90"
+            className="px-8 py-2.5 rounded text-white font-semibold transition-opacity hover:opacity-90 max-sm:w-full"
           >
             Search
           </button>

@@ -51,10 +51,10 @@ const FeaturesSection = () => {
                 </div>
 
                 {/* Buttons */}
-                <div className="flex items-center gap-8">
+                <div className="flex flex-col md:flex-row items-center gap-8">
                     <button 
                         onClick={() => navigate('/hostels')}
-                        className="bg-[#2b5a84] hover:bg-[#1e4161] text-white px-8 py-3 rounded-md font-semibold transition-all"
+                        className="btn  hover:bg-[#1e4161] text-white !px-8 py-3 rounded-md font-semibold transition-all"
                     >
                         Find Hostels
                     </button>
@@ -72,7 +72,7 @@ const FeaturesSection = () => {
                 <img
                     src="https://images.pexels.com/photos/3184311/pexels-photo-3184311.jpeg?auto=compress&cs=tinysrgb&w=1000"
                     alt="Students laughing and studying in hostel"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-fit"
                 />
 
                 {/* Play Button Overlay */}
