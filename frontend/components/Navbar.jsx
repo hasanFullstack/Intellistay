@@ -86,7 +86,7 @@ const Navbar = ({ openAuth }) => {
             )}
           </div>
         </div>
-
+        {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden mt-2 border-t border-gray-200 pt-3 pb-2">
             <nav className="flex flex-col gap-1">
