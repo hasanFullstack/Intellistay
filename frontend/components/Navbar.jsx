@@ -3,12 +3,13 @@ import { useAuth } from "../src/auth/AuthContext";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import Banner from "./Banner";
+import { FiMenu } from "react-icons/fi";
 
 const Navbar = ({ openAuth }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
+  const [menuOpen, setMenuOpen] = useState(false);
   const handleLogout = () => {
     logout();
     toast.success("Logged out successfully!");
@@ -17,10 +18,10 @@ const Navbar = ({ openAuth }) => {
   };
 
   return (
-    <header className="border-b-[1px] border-gray-300">
+    <header className="relative border-b-[1px] border-gray-300  z-50">
       <Banner />
-      <div className="navbar__inner container mx-auto py-2">
-        <div className="navbar__brand">
+      <div className="flex container flex-col justify-between md:flex-row mx-auto py-2 items-center">
+        <div className="flex items-center justify-between w-full md:w-auto">
           <Link to="/" className="navbar__logo">
             <img
               src="/logo.png"
@@ -28,48 +29,61 @@ const Navbar = ({ openAuth }) => {
               className="navbar__logo-img"
             />
           </Link>
+          <div className="md:hidden block " onClick={() => setMenuOpen(!menuOpen)}>
+            <FiMenu className="w-6 h-6" />
+          </div>
         </div>
+        <div className={`
+            absolute md:static top-full left-0 w-full md:w-auto
+            flex flex-col md:flex-row md:items-center justify-between
+            gap-2 md:gap-0
+            bg-white md:bg-transparent
+            max-sm:border-b max-sm:border-gray-300
+            w-full
+            transition-all duration-300 ease-in-out
+            ${menuOpen ? "opacity-100 pb-3 visible translate-y-0" : "opacity-0 invisible -translate-y-2 md:!opacity-100 md:!visible md:translate-y-0"}
+          `}>
+          <nav className="flex flex-col md:flex-row items-center justify-between w-full">
+            <NavLink to="/" end className="navlink">
+              Home
+            </NavLink>
+            <NavLink to="/hostels" className="navlink">
+              Hostels
+            </NavLink>
+            <NavLink to="/rooms" className="navlink">
+              Rooms
+            </NavLink>
+            <NavLink to="/contact" className="navlink">
+              Contact
+            </NavLink>
+          </nav>
 
-        <nav className="navbar__links">
-          <NavLink to="/" end className="navlink">
-            Home
-          </NavLink>
-          <NavLink to="/hostels" className="navlink">
-            Hostels
-          </NavLink>
-          <NavLink to="/rooms" className="navlink">
-            Rooms
-          </NavLink>
-          <NavLink to="/contact" className="navlink">
-            Contact
-          </NavLink>
-        </nav>
-
-        <div className="navbar__actions">
-          {!user && (
-            <button className="btn btn--ghost" onClick={openAuth}>
-              Login
-            </button>
-          )}
-
-          {user && (
-            <div className="navbar__user-menu">
-              {user?.role === "student" && (
-                <Link to="/dashboard/user" className="btn btn--ghost">
-                  Dashboard
-                </Link>
-              )}
-              {user?.role === "owner" && (
-                <Link to="/dashboard/owner" className="btn btn--ghost">
-                  Dashboard
-                </Link>
-              )}
-
-              <button className="btn btn--outline" onClick={() => setShowLogoutConfirm(true)}>
-                Logout
+          <div className="flex flex-col md:flex-row md:items-center justify-between w-full">
+            {!user && (
+              <button className="btn max-md:!px-13" onClick={openAuth}>
+                Login
               </button>
-            </div>
-          )}
+            )}
+
+            {user && (
+              <div className="flex flex-col md:flex-row items-center justify-between w-full md:w-auto gap-2 md:gap-4">
+                {user?.role === "student" && (
+                  <Link to="/dashboard/user" className="btn max-md:!px-10">
+                    Dashboard
+                  </Link>
+                )}
+                {user?.role === "owner" && (
+                  <Link to="/dashboard/owner" className="btn max-md:!px-10">
+                    Dashboard
+                  </Link>
+                )}
+
+                <button className="btn max-md:!px-13" onClick={() => setShowLogoutConfirm(true)}>
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
+import dns from "dns";
 
 import authRoutes from "./routes/auth.routes.js";
 import hostelRoutes from "./routes/hostel.routes.js";
@@ -21,7 +22,8 @@ import {
   apiLimiter,
 } from "./middleware/security.middleware.js";
 import errorHandler from "./middleware/errorHandler.js";
-
+let server;
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 dotenv.config();
 connectDB();
 
