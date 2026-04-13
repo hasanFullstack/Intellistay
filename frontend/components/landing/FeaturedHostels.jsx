@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Search, Heart, ChevronDown } from "lucide-react";
 import { getAllHostels } from "../../src/api/hostel.api";
 import { getRoomsByHostel } from "../../src/api/room.api";
-import { useFavorites } from "../../src/hooks/useFavorites";
 
 const SEATER_OPTIONS = ["Any Seater", "Single", "2 Seater", "4 Seater"];
 
@@ -20,7 +19,6 @@ const selectedSeaterToBedCount = (selectedSeater) => {
 
 const FeaturedHostels = () => {
   const navigate = useNavigate();
-  const { isFavorited, toggleFavorite } = useFavorites();
   const [activeFilters, setActiveFilters] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("Any Location");
@@ -210,19 +208,19 @@ const FeaturedHostels = () => {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
 
 
-      {/* Main Search Container */}
-      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-12">
+      {/* Main Search + Filters (separate cards) */}
+      <div className="max-w-6xl mx-auto mb-12 space-y-5">
         {/* Top Search Bar */}
-        <div className="p-4 border-b flex flex-col md:flex-row items-center gap-4">
-          <div className="flex-[2] relative">
-            <div className="flex border w-full rounded px-3 py-2 bg-white">
+        <div className="bg-white rounded-2xl shadow-[0_12px_35px_rgba(15,23,42,0.12)] p-4 md:p-5 flex flex-wrap items-center gap-4">
+          <div className="flex-[2] min-w-[300px] relative self-end">
+            <div className="flex items-center rounded-xl px-3 py-2.5 bg-gray-50">
               <Search size={18} className="text-gray-400 mr-2" />
               <input
                 type="text"
                 placeholder="Find hostels by features, Location or address"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="w-full outline-none text-sm text-gray-600"
+                className="w-full outline-none text-sm text-gray-600 bg-transparent"
               />
             </div>
           </div>
@@ -231,14 +229,14 @@ const FeaturedHostels = () => {
             type="button"
             onClick={runSearch}
             style={{ backgroundColor: primaryColor }}
-            className="px-8 py-2.5 rounded text-white font-semibold transition-opacity hover:opacity-90 max-sm:w-full"
+            className="px-8 py-2.5 rounded text-white font-semibold self-end transition-opacity hover:opacity-90"
           >
             Search
           </button>
         </div>
 
         {/* Filters Section */}
-        <div className="p-4 bg-white">
+        <div className="p-4 md:p-5 bg-white rounded-2xl shadow-[0_12px_35px_rgba(15,23,42,0.10)]">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setActiveFilters(!activeFilters)}
@@ -272,7 +270,7 @@ const FeaturedHostels = () => {
                   <select
                     value={selectedSeater}
                     onChange={(e) => setSelectedSeater(e.target.value)}
-                    className="w-full border rounded px-3 py-2 bg-white text-sm text-gray-700 appearance-none"
+                    className="w-full rounded-xl px-3 py-2.5 bg-gray-50 text-sm text-gray-700 appearance-none"
                   >
                     {SEATER_OPTIONS.map((seaterLabel) => (
                       <option key={seaterLabel} value={seaterLabel}>
@@ -294,7 +292,7 @@ const FeaturedHostels = () => {
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full border rounded px-3 py-2 bg-gray-50 text-sm text-gray-700 appearance-none"
+                    className="w-full rounded-xl px-3 py-2.5 bg-gray-50 text-sm text-gray-700 appearance-none"
                   >
                     {locationOptions.map((location) => (
                       <option key={location} value={location}>
@@ -362,22 +360,8 @@ const FeaturedHostels = () => {
                     </div>
 
                     {/* Heart Icon */}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(hostel._id);
-                      }}
-                      className="absolute top-3 right-3 backdrop-blur-md p-1.5 text-white hover:bg-white hover:text-red-500 transition-all duration-200"
-                      style={{
-                        borderRadius: "0.375rem",
-                        backgroundColor: isFavorited(hostel._id) ? "rgba(239, 68, 68, 0.8)" : "rgba(0, 0, 0, 0.2)"
-                      }}
-                    >
-                      <Heart 
-                        size={18} 
-                        fill={isFavorited(hostel._id) ? "currentColor" : "none"}
-                        color="white"
-                      />
+                    <button className="absolute top-3 right-3 bg-white/20 backdrop-blur-md p-1.5 rounded-full text-white hover:bg-white hover:text-red-500 transition-colors">
+                      <Heart size={18} />
                     </button>
                   </div>
 
