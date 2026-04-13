@@ -256,7 +256,7 @@ const Hostels = () => {
   return (
     <div className="hostels-page">
       {/* Hero Section */}
-      <div className="relative overflow-hidden hostels-hero" style={{ height: "400px", width: "100vw", marginLeft: "calc(-50vw + 50%)" }}>
+      <div className="relative overflow-hidden hostels-hero flex flex-col items-center justify-center" style={{ height: "400px", width: "100vw", marginLeft: "calc(-50vw + 50%)" }}>
         <div className="absolute h-full w-full inset-0">
           <div className="absolute inset-0 bg-black/40"></div>
           <img src="https://www.arcodesk.com/wp-content/uploads/2025/09/Islamic-University-Hostel-Building-Design-in-Narowal.jpeg"
@@ -288,10 +288,10 @@ const Hostels = () => {
 
         {loading ? (
           <div className="hostels-container">
-            <div className="flex results-info flex-col gap-4">
-              <div className="flex justify-between">
-                <div className="flex gap-2 items-center">
-                  <p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="flex gap-2 items-center justify-between">
+                  <p className="mb-0">
                     Showing <strong>{filteredHostels.length}</strong> hostel
                     {filteredHostels.length !== 1 ? "s" : ""}
                   </p>
@@ -317,7 +317,7 @@ const Hostels = () => {
                   ]}
                 />
               </div>
-              <div className="flex items-center gap-4 flex-wrap">
+              <div className="">
                 {user?.role === "student" && (
                   <div
                     style={{
@@ -330,7 +330,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("All Hostels")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "All Hostels"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "All Hostels"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -340,7 +340,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("available")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "available"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "available"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -350,7 +350,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("recommended")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "recommended"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "recommended"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -360,7 +360,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("popular")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "popular"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "popular"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -370,7 +370,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("budget")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "budget"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "budget"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -390,10 +390,10 @@ const Hostels = () => {
           </div>
         ) : filteredHostels.length === 0 ? (
           <div className="hostels-container">
-            <div className="flex results-info flex-col gap-4">
-              <div className="flex justify-between">
-                <div className="flex gap-2 items-center">
-                  <p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="flex gap-2 items-center justify-between">
+                  <p className="mb-0">
                     Showing <strong>{filteredHostels.length}</strong> hostel
                     {filteredHostels.length !== 1 ? "s" : ""}
                   </p>
@@ -432,7 +432,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("All Hostels")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "All Hostels"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "All Hostels"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -442,7 +442,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("available")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "available"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "available"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -452,7 +452,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("recommended")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "recommended"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "recommended"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -462,7 +462,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("popular")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "popular"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "popular"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -472,7 +472,7 @@ const Hostels = () => {
                     <button
                       onClick={() => handleFilterChange("budget")}
                       style={{ borderRadius: "9999px" }}
-                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "budget"
+                      className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "budget"
                         ? "bg-[#235784] text-white hover:opacity-95"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                         }`}
@@ -496,9 +496,9 @@ const Hostels = () => {
         ) : (
           <div className="hostels-container">
             <div className="flex flex-col results-info gap-4">
-              <div className="flex justify-between">
-                <div className="flex gap-2 items-center">
-                  <p>
+              <div className="flex flex-col md:flex-row justify-between gap-4">
+                <div className="flex gap-2 items-center justify-between">
+                  <p className="mb-0">
                     Showing <strong>{filteredHostels.length}</strong> hostel
                     {filteredHostels.length !== 1 ? "s" : ""}
                   </p>
@@ -541,7 +541,7 @@ const Hostels = () => {
                       <button
                         onClick={() => handleFilterChange("All Hostels")}
                         style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "All Hostels"
+                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "All Hostels"
                           ? "bg-[#235784] text-white hover:opacity-95"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                           }`}
@@ -551,7 +551,7 @@ const Hostels = () => {
                       <button
                         onClick={() => handleFilterChange("available")}
                         style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "available"
+                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "available"
                           ? "bg-[#235784] text-white hover:opacity-95"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                           }`}
@@ -561,7 +561,7 @@ const Hostels = () => {
                       <button
                         onClick={() => handleFilterChange("recommended")}
                         style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "recommended"
+                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "recommended"
                           ? "bg-[#235784] text-white hover:opacity-95"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                           }`}
@@ -571,7 +571,7 @@ const Hostels = () => {
                       <button
                         onClick={() => handleFilterChange("popular")}
                         style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "popular"
+                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "popular"
                           ? "bg-[#235784] text-white hover:opacity-95"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                           }`}
@@ -581,7 +581,7 @@ const Hostels = () => {
                       <button
                         onClick={() => handleFilterChange("budget")}
                         style={{ borderRadius: "9999px" }}
-                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none ${selectedFilter === "budget"
+                        className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-colors focus:outline-none min-w-38 ${selectedFilter === "budget"
                           ? "bg-[#235784] text-white hover:opacity-95"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-300"
                           }`}
