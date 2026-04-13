@@ -256,7 +256,7 @@ const Hostels = () => {
   return (
     <div className="hostels-page">
       {/* Hero Section */}
-      <div className="relative overflow-hidden hostels-hero flex flex-col items-center justify-center" style={{ height: "400px", width: "100vw", marginLeft: "calc(-50vw + 50%)" }}>
+      <div className="relative overflow-hidden hostels-hero " style={{ height: "400px", width: "100vw", marginLeft: "calc(-50vw + 50%)" }}>
         <div className="absolute h-full w-full inset-0">
           <div className="absolute inset-0 bg-black/40"></div>
           <img src="https://www.arcodesk.com/wp-content/uploads/2025/09/Islamic-University-Hostel-Building-Design-in-Narowal.jpeg"
