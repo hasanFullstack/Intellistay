@@ -4,7 +4,17 @@ import Room from "../models/Room.js";
 import Hostel from "../models/Hostel.js";
 import User from "../models/Users.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET);
+let stripe = null;
+if (process.env.STRIPE_SECRET) {
+  try {
+    stripe = new Stripe(process.env.STRIPE_SECRET);
+  } catch (e) {
+    console.warn("Failed to initialize Stripe:", e.message || e);
+    stripe = null;
+  }
+} else {
+  console.warn("STRIPE_SECRET not set — Stripe features disabled");
+}
 
 const mailTransporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -117,8 +127,9 @@ export const createCheckoutSession = async (req, res, next) => {
     let line_items;
 
     // If a roomId is provided, fetch the real room price and use it
+    let room = null;
     if (roomId) {
-      const room = await Room.findById(roomId).populate("hostelId");
+      room = await Room.findById(roomId).populate("hostelId");
       if (!room) return res.status(404).json({ message: "Room not found" });
 
       const hostelName =
@@ -283,6 +294,12 @@ export const createCheckoutSession = async (req, res, next) => {
           "Owner Stripe lookup failed",
           lookupErr.message || lookupErr,
         );
+      }
+
+      if (!stripeClient) {
+        return res
+          .status(500)
+          .json({ message: "Stripe is not configured on the server" });
       }
 
       session = await stripeClient.checkout.sessions.create(sessionParams);

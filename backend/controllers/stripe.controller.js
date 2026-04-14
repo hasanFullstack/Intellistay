@@ -3,7 +3,17 @@ import nodemailer from "nodemailer";
 import Hostel from "../models/Hostel.js";
 import User from "../models/Users.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET);
+let stripe = null;
+if (process.env.STRIPE_SECRET) {
+  try {
+    stripe = new Stripe(process.env.STRIPE_SECRET);
+  } catch (e) {
+    console.warn("Failed to initialize Stripe:", e.message || e);
+    stripe = null;
+  }
+} else {
+  console.warn("STRIPE_SECRET not set — Stripe features disabled");
+}
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -18,6 +28,12 @@ const transporter = nodemailer.createTransport({
 });
 
 export const handleStripeWebhook = async (req, res) => {
+  if (!stripe) {
+    console.error(
+      "Stripe is not configured on the server. Webhook cannot be processed.",
+    );
+    return res.status(500).send("Stripe not configured");
+  }
   const sig = req.headers["stripe-signature"];
   let event;
   try {
